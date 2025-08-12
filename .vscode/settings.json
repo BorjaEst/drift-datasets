@@ -1,0 +1,30 @@
+{
+    // Python configuration
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "black-formatter.args": [
+        "--config",
+        "${workspaceFolder}/pyproject.toml"
+    ],
+    // TOML configuration
+    "evenBetterToml.formatter.alignEntries": true,
+    "evenBetterToml.formatter.indentEntries": true,
+    "evenBetterToml.formatter.alignComments": false,
+    "evenBetterToml.formatter.indentTables": true,
+    "evenBetterToml.formatter.columnWidth": 120,
+    // LaTeX configuration
+    "[latex]": {
+        // Hard wrap LaTeX files at 90 chars on format/save
+        "editor.wordWrap": "bounded",
+        "editor.wordWrapColumn": 90,
+        "editor.rulers": [
+            90
+        ],
+        "editor.formatOnSave": true
+    },
+    // Copilot configuration
+    "chat.agent.maxRequests": 200
+}
