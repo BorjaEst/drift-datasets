@@ -1,0 +1,84 @@
+[build-system]
+    requires      = ["setuptools>=61.0", "wheel"]
+    build-backend = "setuptools.build_meta"
+
+
+[project]
+    requires-python = "~=3.10"
+    name = "drift-datasets"
+    description = "A Python library for generating synthetic datasets with comprehensive concept drift patterns"
+    authors = [{ name = "Borja Esteban", email = "boressan@outlook.com" }]
+    license = { text = "GNU General Public License v3.0" }
+    classifiers = [
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Programming Language :: Python :: 3.10",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ]
+    keywords = ["concept-drift", "machine-learning", "synthetic-datasets"]
+    dynamic = ["version", "dependencies"]
+
+    [project.urls]
+        Homepage   = "https://github.com/BorjaEst/drift-datasets"
+        Repository = "https://github.com/BorjaEst/drift-datasets.git"
+        Issues     = "https://github.com/BorjaEst/drift-datasets/issues"
+        Changelog  = "https://github.com/BorjaEst/drift-datasets/blob/main/CHANGELOG.md"
+
+
+[tool.setuptools]
+    package-dir = { "" = "src" }
+
+    [tool.setuptools.dynamic]
+        version      = { file = "src/drift_datasets/VERSION" }
+        readme       = { file = ["README.md"] }
+        dependencies = { file = ["requirements.txt"] }
+
+        [tool.setuptools.dynamic.optional-dependencies]
+            dev = { file = ["requirements-dev.txt"] }
+
+[tool.black]
+    line-length    = 140
+    target-version = ["py310"]
+
+[tool.isort]
+    profile                        = "black"
+    multi_line_output              = 3
+    line_length                    = 140
+    include_trailing_comma         = true
+    force_grid_wrap                = 0
+    use_parentheses                = true
+    ensure_newline_before_comments = true
+    src_paths                      = ["src", "tests"]
+
+[tool.mypy]
+    python_version           = "3.10"
+    warn_return_any          = true
+    warn_unused_configs      = true
+    disallow_untyped_defs    = true
+    disallow_incomplete_defs = true
+
+[tool.pytest.ini_options]
+    pythonpath = [".", "src"]
+    testpaths = ["tests"]
+    python_files = "test_*.py"
+    python_classes = "Test*"
+    python_functions = "test_*"
+    addopts = "--import-mode=importlib"
+    env = [
+        "DRIFT_BENCHMARK_COMPONENTS_DIR=tests/assets/components",
+        "DRIFT_BENCHMARK_CONFIGURATIONS_DIR=tests/assets/configurations",
+        "DRIFT_BENCHMARK_DATASETS_DIR=tests/assets/datasets",
+        "DRIFT_BENCHMARK_RESULTS_DIR=tests/assets/results",
+        "DRIFT_BENCHMARK_LOGS_DIR=logs",
+        "DRIFT_BENCHMARK_SCENARIOS_DIR=tests/assets/scenarios",
+        "DRIFT_BENCHMARK_SKIP_VALIDATION=1",
+    ]
+    markers = [
+        "unit: Unit tests",
+        "integration: Integration tests",
+        "property: Property-based tests",
+        "performance: Performance benchmark tests",
+        "slow: Tests that take a long time to run",
+    ]
+    filterwarnings = ["error", "ignore::UserWarning", "ignore::DeprecationWarning"]
