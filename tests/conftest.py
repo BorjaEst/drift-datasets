@@ -1,8 +1,23 @@
 """
 Test configuration and shared fixtures for drift-datasets.
 
-This module provides session-scoped fixtures for CapyMOA mocks, UCI repository mocks,
-test data, and common test utilities used across all test categories.
+This module provides fixtures with optimized scopes for performance while maintaining
+race condition safety and TDD best practices:
+
+FIXTURE SCOPING STRATEGY:
+- Session scope: Static, immutable data (utilities, thresholds, error configs)
+- Module scope: Asset-based configs (read-only files, safe per module)
+- Function scope: Mocks with patches (prevent state sharing between tests)
+
+RACE CONDITION SAFETY:
+- All mock fixtures remain function-scoped to prevent patch conflicts
+- Asset-based configs are read from disk (deterministic, no dynamic generation)
+- Static data fixtures are immutable and safe for sharing
+
+TDD BEST PRACTICES:
+- Clear separation between test data and test logic
+- Deterministic test execution with fixed assets
+- Fast feedback loops with optimized fixture scopes
 """
 
 import tempfile
@@ -16,9 +31,13 @@ import pytest
 import toml
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def capymoa_interface_mock():
-    """Mock CapyMOAInterface for factory testing."""
+    """Mock CapyMOAInterface for factory testing.
+
+    Function-scoped for safety - this mock uses patches that would conflict
+    if shared between parallel test workers. Each test gets a fresh mock instance.
+    """
     with patch("drift_datasets.factory.CapyMOAInterface") as mock_interface_class:
         mock_interface = Mock()
 
@@ -30,22 +49,40 @@ def capymoa_interface_mock():
 
             mock_generator = Mock()
             n_instances = generator_config.get("n_instances", 1000)
+            n_features = generator_config.get("n_features", 2)
+
+            # Generate deterministic data using the random seed
+            random_seed = generator_config.get("random_seed", 42)
+            rng = np.random.RandomState(random_seed)
+
+            # Create feature names based on n_features
+            if generator_name == "HyperplaneGenerator":
+                feature_names = [f"feature_{i}" for i in range(n_features)]
+                X_data = {name: rng.randn(n_instances) for name in feature_names}
+            elif generator_name == "STAGGERGenerator":
+                # STAGGER has encoded features (after get_dummies)
+                # Simplify to expected features
+                X_data = {f"feature_{i}": rng.randn(n_instances) for i in range(n_features)}
+            else:
+                # Default for Sine, SEA
+                X_data = {f"feature_{i}": rng.randn(n_instances) for i in range(n_features)}
 
             # Return tuple format (X, y) as expected by the factory
             mock_generator.generate.return_value = (
-                pd.DataFrame(
-                    {
-                        "x": np.random.RandomState(42).random(n_instances),
-                        "y": np.random.RandomState(42).random(n_instances),
-                    }
-                ),
-                pd.Series(np.random.RandomState(42).randint(0, 2, n_instances), name="target"),
+                pd.DataFrame(X_data),
+                pd.Series(rng.randint(0, 2, n_instances), name="target"),
             )
             return mock_generator
 
         # Mock the create_generator method to return our mock generator factory
         mock_interface.create_generator.side_effect = create_mock_generator
-        mock_interface.get_generator_parameters.return_value = ["n_instances", "random_seed", "noise_level", "classification_function"]
+        mock_interface.get_generator_parameters.return_value = [
+            "n_instances",
+            "random_seed",
+            "noise_level",
+            "classification_function",
+            "n_features",
+        ]
         mock_interface.check_availability.return_value = (True, {"version": "1.0.0", "generators": ["SineGenerator"]})
         mock_interface.translate_parameters.return_value = {"numInstances": 1000, "randomSeed": 42}
 
@@ -53,9 +90,13 @@ def capymoa_interface_mock():
         yield mock_interface_class
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def capymoa_service():
-    """Mock CapyMOA service for deterministic test execution."""
+    """Mock CapyMOA service for deterministic test execution.
+
+    Function-scoped for safety - this mock uses patches that would conflict
+    if shared between parallel test workers. Each test gets a fresh mock instance.
+    """
     with patch("drift_datasets.generators.synthetic.CapyMOAService") as mock_service:
         # Configure mock to return deterministic synthetic data
         mock_instance = Mock()
@@ -91,31 +132,46 @@ def capymoa_service():
         yield mock_service
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def uci_repository_service():
-    """Mock UCI ML Repository service for deterministic test execution."""
-    with patch("drift_datasets.generators.real_world.UCIService") as mock_service:
+    """Mock UCI ML Repository service for deterministic test execution.
+
+    Function-scoped for safety - this mock uses patches that would conflict
+    if shared between parallel test workers. Each test gets a fresh mock instance.
+    """
+    with patch("drift_datasets.factory.UCIRepository") as mock_repository_class:
+        mock_repository = Mock()
+
         # Mock electricity dataset (ID: 321)
-        mock_instance = Mock()
-        mock_instance.load_dataset.return_value = {
-            "X": pd.DataFrame(
-                {
-                    "date": pd.date_range("2000-01-01", periods=1000, freq="D"),
-                    "demand": np.random.RandomState(42).normal(1000, 100, 1000),
-                    "price": np.random.RandomState(42).normal(50, 10, 1000),
-                }
-            ),
-            "y": pd.Series(np.random.RandomState(42).randint(0, 2, 1000), name="class"),
-            "metadata": {"dataset_id": 321, "name": "Electricity Market", "task": "classification", "n_instances": 1000, "n_features": 3},
+        mock_repository.is_dataset_available.return_value = True
+        mock_repository.fetch_dataset.return_value = pd.DataFrame(
+            {
+                "date": pd.date_range("2000-01-01", periods=1000, freq="D"),
+                "demand": np.random.RandomState(42).normal(1000, 100, 1000),
+                "price": np.random.RandomState(42).normal(50, 10, 1000),
+                "target": np.random.RandomState(42).randint(0, 2, 1000),
+            }
+        )
+        mock_repository.get_dataset_info.return_value = {
+            "dataset_id": 321,
+            "name": "Electricity Market",
+            "task": "classification",
+            "n_instances": 1000,
+            "n_features": 3,
+            "url": "https://archive.ics.uci.edu/dataset/321",
         }
 
-        mock_service.return_value = mock_instance
-        yield mock_service
+        mock_repository_class.return_value = mock_repository
+        yield mock_repository_class
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def parameter_translator():
-    """Mock parameter translator for research parameter conversion."""
+    """Mock parameter translator for research parameter conversion.
+
+    Function-scoped for safety - this mock has translation logic that could
+    interfere if shared between tests. Each test gets a fresh translator instance.
+    """
     # Use a simpler mock that doesn't require the module to exist
     mock_translator = Mock()
 
@@ -143,143 +199,185 @@ def parameter_translator():
     yield mock_translator
 
 
-@pytest.fixture
-def sample_toml_configs(tmp_path):
-    """Generate sample TOML configuration files for testing."""
+@pytest.fixture(scope="module")
+def sample_toml_configs():
+    """Generate sample TOML configuration files for testing.
+
+    Module-scoped for performance - these are read-only asset files that
+    don't change between tests and are safe to share within a test module.
+    """
+    # Use assets instead of dynamically generated configs for better isolation
+    assets_dir = Path(__file__).parent / "assets"
+
     configs = {}
 
-    # Synthetic Sine dataset configuration
-    sine_config = {
-        "dataset": {"name": "test_sine", "type": "synthetic", "source": "capymoa", "generator": "SineGenerator"},
-        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
-        "features": [
-            {"name": "x", "type": "continuous", "role": "feature"},
-            {"name": "y", "type": "continuous", "role": "feature"},
-            {"name": "class", "type": "categorical", "role": "target"},
-        ],
-        "generator_config": {"n_instances": 1000, "classification_function": 1, "random_seed": 42},
-        "drift_config": {"drift_points": [500], "drift_types": ["concept"], "drift_patterns": ["abrupt"]},
+    # Map asset files to test names
+    asset_files = {
+        "sine": "sample_config_valid.toml",
+        "research_params": "research_params_config.toml",
+        "missing_field": "sample_config_missing_field.toml",
+        "uci": "uci_config.toml",
+        "mixed": "mixed_config.toml",
+        "hyperplane": "hyperplane_config.toml",
+        "stagger": "stagger_config.toml",
+        "sea": "sea_config.toml",
+        "expertsystems_sine": "expertsystems_sine_config.toml",
+        "expertsystems_hyperplane": "expertsystems_hyperplane_config.toml",
     }
 
-    # Real-world UCI dataset configuration
-    uci_config = {
-        "dataset": {"name": "test_electricity", "type": "real_world", "source": "ucimlrepo"},
-        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
-        "uci_config": {"dataset_id": 321, "preprocessing": ["normalize", "temporal_order"]},
-        "drift_config": {
-            "drift_points": [400, 800],
-            "drift_types": ["covariate", "concept"],
-            "drift_patterns": ["gradual", "abrupt"],
-            "drift_simulation": "concept_shift",
-        },
-    }
+    # Check if assets exist, if not create them
+    all_exist = all((assets_dir / filename).exists() for filename in asset_files.values())
 
-    # Hyperplane dataset configuration
-    hyperplane_config = {
-        "dataset": {"name": "test_hyperplane", "type": "synthetic", "source": "capymoa", "generator": "HyperplaneGenerator"},
-        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
-        "features": [{"name": f"feature_{i}", "type": "continuous", "role": "feature"} for i in range(10)]
-        + [{"name": "class", "type": "categorical", "role": "target"}],
-        "generator_config": {"n_instances": 1000, "n_features": 10, "random_seed": 42},
-        "drift_config": {"drift_points": [500], "drift_types": ["concept"], "drift_patterns": ["gradual"]},
-    }
-
-    # STAGGER dataset configuration
-    stagger_config = {
-        "dataset": {"name": "test_stagger", "type": "synthetic", "source": "capymoa", "generator": "STAGGERGenerator"},
-        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
-        "features": [
-            {"name": "size", "type": "categorical", "role": "feature"},
-            {"name": "color", "type": "categorical", "role": "feature"},
-            {"name": "shape", "type": "categorical", "role": "feature"},
-            {"name": "class", "type": "categorical", "role": "target"},
-        ],
-        "generator_config": {"n_instances": 1000, "concept_index": 1, "random_seed": 42},
-        "drift_config": {"drift_points": [333, 666], "drift_types": ["concept", "concept"], "drift_patterns": ["abrupt", "abrupt"]},
-    }
-
-    # SEA dataset configuration
-    sea_config = {
-        "dataset": {"name": "test_sea", "type": "synthetic", "source": "capymoa", "generator": "SEAGenerator"},
-        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
-        "features": [
-            {"name": "x1", "type": "continuous", "role": "feature"},
-            {"name": "x2", "type": "continuous", "role": "feature"},
-            {"name": "x3", "type": "continuous", "role": "feature"},
-            {"name": "class", "type": "categorical", "role": "target"},
-        ],
-        "generator_config": {"n_instances": 1000, "threshold": 8, "noise_percentage": 0.1, "random_seed": 42},
-        "drift_config": {"drift_points": [500], "drift_types": ["concept"], "drift_patterns": ["abrupt"]},
-    }
-
-    # Mixed dataset configuration
-    mixed_config = {
-        "dataset": {"name": "test_mixed", "type": "mixed"},
-        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
-        "mixed_config": {
-            "combination_type": "sequential",
-            "components": [
-                {"source": "capymoa", "generator": "SineGenerator", "n_instances": 500, "weight": 0.5},
-                {"source": "ucimlrepo", "dataset_id": 321, "n_instances": 500, "weight": 0.5},
-            ],
-        },
-        "drift_config": {"drift_points": [250, 750], "drift_types": ["concept", "covariate"], "drift_patterns": ["abrupt", "gradual"]},
-    }
-
-    # ExpertSystems configurations
-    expertsystems_sine_config = {
-        "dataset": {"name": "expertsystems_sine", "type": "synthetic", "source": "capymoa", "generator": "SineGenerator"},
-        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
-        "generator_config": {"n_instances": 50000, "classification_function": 1, "random_seed": 42},
-        "drift_config": {
-            "drift_points": [10000, 25000, 40000],
-            "drift_types": ["concept", "concept", "concept"],
-            "drift_patterns": ["abrupt", "abrupt", "abrupt"],
-            "concept_reversal": True,
-        },
-    }
-
-    expertsystems_hyperplane_config = {
-        "dataset": {"name": "expertsystems_hyperplane", "type": "synthetic", "source": "capymoa", "generator": "HyperplaneGenerator"},
-        "generator_config": {
-            "n_instances": 100000,
-            "n_dimensions": 10,
-            "n_drifting_dimensions": 10,
-            "noise_percentage": 0.05,
-            "random_seed": 42,
-        },
-        "drift_config": {
-            "drift_points": [25000, 50000, 75000],
-            "drift_patterns": ["gradual", "gradual", "gradual"],
-            "drift_types": ["concept", "concept", "concept"],
-            "continuous_drift": True,
-        },
-    }
-
-    # Write TOML files
-    config_files = {
-        "sine": sine_config,
-        "uci": uci_config,
-        "hyperplane": hyperplane_config,
-        "stagger": stagger_config,
-        "sea": sea_config,
-        "mixed": mixed_config,
-        "expertsystems_sine": expertsystems_sine_config,
-        "expertsystems_hyperplane": expertsystems_hyperplane_config,
-    }
-
-    for name, config in config_files.items():
-        config_file = tmp_path / f"{name}.toml"
-        with open(config_file, "w") as f:
-            toml.dump(config, f)
-        configs[name] = str(config_file)
+    if not all_exist:
+        # Create basic configs inline for backwards compatibility
+        configs.update(_generate_inline_configs())
+    else:
+        # Use asset files for more deterministic testing
+        for name, filename in asset_files.items():
+            configs[name] = str(assets_dir / filename)
 
     return configs
 
 
-@pytest.fixture
+def _generate_inline_configs():
+    """Generate inline configs for backward compatibility."""
+    import tempfile
+
+    import toml
+
+    configs = {}
+
+    # Basic synthetic configs
+    basic_configs = {
+        "sine": {
+            "dataset": {"name": "test_sine", "type": "synthetic", "source": "capymoa", "generator": "SineGenerator"},
+            "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "features": [
+                {"name": "feature_0", "type": "continuous", "role": "feature"},
+                {"name": "feature_1", "type": "continuous", "role": "feature"},
+                {"name": "target", "type": "categorical", "role": "target"},
+            ],
+            "generator_config": {"n_instances": 1000, "classification_function": 1, "random_seed": 42},
+            "drift_config": {"drift_points": [500], "drift_types": ["concept"], "drift_patterns": ["abrupt"]},
+        },
+        "hyperplane": {
+            "dataset": {"name": "test_hyperplane", "type": "synthetic", "source": "capymoa", "generator": "HyperplaneGenerator"},
+            "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "features": [{"name": f"feature_{i}", "type": "continuous", "role": "feature"} for i in range(10)]
+            + [{"name": "target", "type": "categorical", "role": "target"}],
+            "generator_config": {"n_instances": 1000, "n_features": 10, "random_seed": 42},
+            "drift_config": {"drift_points": [500], "drift_types": ["concept"], "drift_patterns": ["gradual"]},
+        },
+        "stagger": {
+            "dataset": {"name": "test_stagger", "type": "synthetic", "source": "capymoa", "generator": "STAGGERGenerator"},
+            "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "features": [
+                {"name": "feature_0", "type": "continuous", "role": "feature"},
+                {"name": "feature_1", "type": "continuous", "role": "feature"},
+                {"name": "target", "type": "categorical", "role": "target"},
+            ],
+            "generator_config": {"n_instances": 1000, "concept_index": 1, "random_seed": 42},
+            "drift_config": {"drift_points": [333, 666], "drift_types": ["concept", "concept"], "drift_patterns": ["abrupt", "abrupt"]},
+        },
+        "sea": {
+            "dataset": {"name": "test_sea", "type": "synthetic", "source": "capymoa", "generator": "SEAGenerator"},
+            "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "features": [
+                {"name": "feature_0", "type": "continuous", "role": "feature"},
+                {"name": "feature_1", "type": "continuous", "role": "feature"},
+                {"name": "feature_2", "type": "continuous", "role": "feature"},
+                {"name": "target", "type": "categorical", "role": "target"},
+            ],
+            "generator_config": {"n_instances": 1000, "threshold": 8, "noise_percentage": 0.1, "random_seed": 42},
+            "drift_config": {"drift_points": [500], "drift_types": ["concept"], "drift_patterns": ["abrupt"]},
+        },
+        "uci": {
+            "dataset": {"name": "test_electricity", "type": "real_world", "source": "ucimlrepo"},
+            "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "uci_config": {"dataset_id": 321, "preprocessing": ["normalize", "temporal_order"]},
+            "drift_config": {
+                "drift_points": [400, 800],
+                "drift_types": ["covariate", "concept"],
+                "drift_patterns": ["gradual", "abrupt"],
+                "drift_simulation": "concept_shift",
+            },
+        },
+        "mixed": {
+            "dataset": {"name": "test_mixed", "type": "mixed"},
+            "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "mixed_config": {
+                "combination_type": "sequential",
+                "components": [
+                    {"source": "capymoa", "generator": "SineGenerator", "n_instances": 500, "weight": 0.5},
+                    {"source": "ucimlrepo", "dataset_id": 321, "n_instances": 500, "weight": 0.5},
+                ],
+            },
+            "drift_config": {"drift_points": [250, 750], "drift_types": ["concept", "covariate"], "drift_patterns": ["abrupt", "gradual"]},
+        },
+        "research_params": {
+            "dataset": {"name": "test_research_params", "type": "synthetic", "source": "capymoa", "generator": "HyperplaneGenerator"},
+            "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "features": [
+                {"name": "feature_0", "type": "continuous", "role": "feature"},
+                {"name": "feature_1", "type": "continuous", "role": "feature"},
+                {"name": "feature_2", "type": "continuous", "role": "feature"},
+                {"name": "target", "type": "categorical", "role": "target"},
+            ],
+            "generator_config": {"n_instances": 1000, "n_features": 3, "random_seed": 42},
+            "drift_config": {
+                "drift_points": [300, 600],
+                "drift_types": ["concept", "concept"],
+                "drift_patterns": ["gradual", "abrupt"],
+                "transition_durations": [100, 0],
+                "drift_intensities": [0.5, 0.8],
+                "affected_features": [[0, 1], [2]],
+            },
+        },
+        "expertsystems_sine": {
+            "dataset": {"name": "expertsystems_sine", "type": "synthetic", "source": "capymoa", "generator": "SineGenerator"},
+            "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "generator_config": {"n_instances": 50000, "classification_function": 1, "random_seed": 42},
+            "drift_config": {
+                "drift_points": [10000, 25000, 40000],
+                "drift_types": ["concept", "concept", "concept"],
+                "drift_patterns": ["abrupt", "abrupt", "abrupt"],
+                "concept_reversal": True,
+            },
+        },
+        "expertsystems_hyperplane": {
+            "dataset": {"name": "expertsystems_hyperplane", "type": "synthetic", "source": "capymoa", "generator": "HyperplaneGenerator"},
+            "generator_config": {
+                "n_instances": 100000,
+                "n_dimensions": 10,
+                "n_drifting_dimensions": 10,
+                "noise_percentage": 0.05,
+                "random_seed": 42,
+            },
+            "drift_config": {
+                "drift_points": [25000, 50000, 75000],
+                "drift_patterns": ["gradual", "gradual", "gradual"],
+                "drift_types": ["concept", "concept", "concept"],
+                "continuous_drift": True,
+            },
+        },
+    }
+
+    # Write TOML files
+    for name, config in basic_configs.items():
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            toml.dump(config, f)
+            configs[name] = f.name
+
+    return configs
+
+
+@pytest.fixture(scope="module")
 def expertsystems_configs(sample_toml_configs):
-    """ExpertSystems paper configurations for testing."""
+    """ExpertSystems paper configurations for testing.
+
+    Module-scoped for performance - inherits from sample_toml_configs and
+    provides static mappings that are safe to share within a test module.
+    """
     return {
         "sine_expertsystems": sample_toml_configs["expertsystems_sine"],
         "hyperplane_expertsystems": sample_toml_configs["expertsystems_hyperplane"],
@@ -289,7 +387,11 @@ def expertsystems_configs(sample_toml_configs):
 
 @pytest.fixture
 def sample_drift_dataset():
-    """Create a sample DriftDataset for testing."""
+    """Create a sample DriftDataset for testing.
+
+    Function-scoped for safety - each test should get its own independent
+    dataset instance to prevent test interference.
+    """
     # This will be imported once the DriftDataset class is implemented
     # For now, return a mock structure
     return {
@@ -320,9 +422,13 @@ def sample_drift_dataset():
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def expected_dataset_shapes():
-    """Expected dataset shapes for validation."""
+    """Expected dataset shapes for validation.
+
+    Session-scoped for performance - this is immutable reference data
+    that is safe to share across all tests.
+    """
     return {
         "small": {"n_instances": 1000, "n_features": 2},
         "medium": {"n_instances": 10000, "n_features": 5},
@@ -332,9 +438,13 @@ def expected_dataset_shapes():
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def validation_utilities():
-    """Utility functions for test validation."""
+    """Utility functions for test validation.
+
+    Session-scoped for performance - these are pure functions with no state
+    that are safe to share across all tests.
+    """
 
     def validate_dataset_structure(dataset, expected_shape):
         """Validate dataset has expected structure and shape."""
@@ -380,18 +490,26 @@ def validation_utilities():
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def performance_benchmarks():
-    """Performance benchmark thresholds for testing."""
+    """Performance benchmark thresholds for testing.
+
+    Session-scoped for performance - these are static configuration values
+    that are safe to share across all tests.
+    """
     return {
         "generation_time": {"1k_samples": 5.0, "10k_samples": 30.0, "100k_samples": 300.0},  # seconds  # seconds  # seconds
         "memory_usage": {"1k_samples": 100, "10k_samples": 1000, "100k_samples": 8000},  # MB  # MB  # MB
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def error_scenarios():
-    """Common error scenarios for negative testing."""
+    """Common error scenarios for negative testing.
+
+    Session-scoped for performance - these are static error configurations
+    that are safe to share across all tests.
+    """
     return {
         "invalid_config": {
             "missing_required_field": {

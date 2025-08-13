@@ -1,0 +1,78 @@
+[dataset]
+    name      = "expertsystems_hyperplane"
+    type      = "synthetic"
+    source    = "capymoa"
+    generator = "HyperplaneGenerator"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+
+[[features]]
+    name = "feature_0"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_1"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_2"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_3"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_4"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_5"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_6"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_7"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_8"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_9"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "target"
+    type = "categorical"
+    role = "target"
+
+[generator_config]
+    n_instances           = 100000
+    n_dimensions          = 10
+    n_drifting_dimensions = 10
+    noise_percentage      = 0.05
+    random_seed           = 42
+
+[drift_config]
+    drift_points     = [25000, 50000, 75000]
+    drift_patterns   = ["gradual", "gradual", "gradual"]
+    drift_types      = ["concept", "concept", "concept"]
+    continuous_drift = true

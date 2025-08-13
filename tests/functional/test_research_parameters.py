@@ -12,39 +12,43 @@ import drift_datasets as dd
 class TestResearchParameterEndToEnd:
     """Test research parameters work end-to-end."""
 
-    def test_create_dataset_with_research_parameters(self):
+    def test_create_dataset_with_research_parameters(self, sample_toml_configs):
         """Test creating a dataset with research parameters."""
-        config = {
-            "dataset": {
-                "name": "test_research_params",
-                "type": "synthetic",
-                "source": "capymoa",
-                "generator": "HyperplaneGenerator",
-                "description": "Test dataset with research parameters",
-            },
-            "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
-            "features": [
-                {"name": "x1", "type": "continuous", "role": "feature"},
-                {"name": "x2", "type": "continuous", "role": "feature"},
-                {"name": "x3", "type": "continuous", "role": "feature"},
-                {"name": "class", "type": "categorical", "role": "target"},
-            ],
-            "generator_config": {
-                "n_instances": 1000,
-                "n_features": 3,
-                "random_seed": 42,
-            },
-            "drift_config": {
-                "drift_points": [300, 600],
-                "drift_types": ["concept", "concept"],
-                "drift_patterns": ["gradual", "abrupt"],
-                "transition_durations": [100, 0],  # Research parameter
-                "drift_intensities": [0.5, 0.8],  # Research parameter
-                "affected_features": [[0, 1], [2]],  # Research parameter
-            },
-        }
-
-        dataset = dd.create_dataset(config)
+        # Use assets-based config for better isolation
+        if "research_params" in sample_toml_configs:
+            dataset = dd.create_dataset(sample_toml_configs["research_params"])
+        else:
+            # Fallback to inline config
+            config = {
+                "dataset": {
+                    "name": "test_research_params",
+                    "type": "synthetic",
+                    "source": "capymoa",
+                    "generator": "HyperplaneGenerator",
+                    "description": "Test dataset with research parameters",
+                },
+                "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+                "features": [
+                    {"name": "feature_0", "type": "continuous", "role": "feature"},
+                    {"name": "feature_1", "type": "continuous", "role": "feature"},
+                    {"name": "feature_2", "type": "continuous", "role": "feature"},
+                    {"name": "target", "type": "categorical", "role": "target"},
+                ],
+                "generator_config": {
+                    "n_instances": 1000,
+                    "n_features": 3,
+                    "random_seed": 42,
+                },
+                "drift_config": {
+                    "drift_points": [300, 600],
+                    "drift_types": ["concept", "concept"],
+                    "drift_patterns": ["gradual", "abrupt"],
+                    "transition_durations": [100, 0],  # Research parameter
+                    "drift_intensities": [0.5, 0.8],  # Research parameter
+                    "affected_features": [[0, 1], [2]],  # Research parameter
+                },
+            }
+            dataset = dd.create_dataset(config)
 
         # Verify dataset was created
         assert dataset.X.shape == (1000, 3)
@@ -56,7 +60,7 @@ class TestResearchParameterEndToEnd:
         assert dataset.drift_metadata.drift_intensities == [0.5, 0.8]
         assert dataset.drift_metadata.affected_features == [[0, 1], [2]]
 
-    def test_create_dataset_research_param_validation(self):
+    def test_create_dataset_research_param_validation(self, sample_toml_configs):
         """Test that research parameter validation works in dataset creation."""
         config = {
             "dataset": {
@@ -66,6 +70,11 @@ class TestResearchParameterEndToEnd:
                 "generator": "HyperplaneGenerator",
             },
             "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "features": [
+                {"name": "feature_0", "type": "continuous", "role": "feature"},
+                {"name": "feature_1", "type": "continuous", "role": "feature"},
+                {"name": "target", "type": "categorical", "role": "target"},
+            ],
             "generator_config": {
                 "n_instances": 500,
                 "n_features": 2,
@@ -83,7 +92,7 @@ class TestResearchParameterEndToEnd:
 
         assert "transition_durations length" in str(exc_info.value)
 
-    def test_create_dataset_backward_compatibility(self):
+    def test_create_dataset_backward_compatibility(self, sample_toml_configs):
         """Test that existing CapyMOA parameters still work."""
         config = {
             "dataset": {
@@ -93,6 +102,11 @@ class TestResearchParameterEndToEnd:
                 "generator": "HyperplaneGenerator",
             },
             "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "features": [
+                {"name": "feature_0", "type": "continuous", "role": "feature"},
+                {"name": "feature_1", "type": "continuous", "role": "feature"},
+                {"name": "target", "type": "categorical", "role": "target"},
+            ],
             "generator_config": {
                 "n_instances": 500,
                 "n_features": 2,
@@ -113,7 +127,7 @@ class TestResearchParameterEndToEnd:
         assert dataset.drift_metadata.drift_points == [200]
         assert dataset.drift_metadata.transition_durations == []  # Default empty list
 
-    def test_mixed_research_and_capymoa_parameters(self):
+    def test_mixed_research_and_capymoa_parameters(self, sample_toml_configs):
         """Test mixing research and CapyMOA parameters (research takes precedence)."""
         config = {
             "dataset": {
@@ -123,6 +137,11 @@ class TestResearchParameterEndToEnd:
                 "generator": "HyperplaneGenerator",
             },
             "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            "features": [
+                {"name": "feature_0", "type": "continuous", "role": "feature"},
+                {"name": "feature_1", "type": "continuous", "role": "feature"},
+                {"name": "target", "type": "categorical", "role": "target"},
+            ],
             "generator_config": {
                 "n_instances": 500,
                 "n_features": 2,

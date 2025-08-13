@@ -13,7 +13,7 @@ class TestPerformanceBenchmarks:
     """Test performance benchmarks functionality (REQ-014)."""
 
     def test_should_generate_100k_synthetic_samples_within_30_seconds_when_performance_tested(
-        self, capymoa_service, sample_toml_configs, tmp_path
+        self, capymoa_interface_mock, sample_toml_configs, tmp_path
     ):
         """Test REQ-014: Generate 100K synthetic samples in <30 seconds."""
         import tempfile
@@ -75,7 +75,7 @@ class TestPerformanceBenchmarks:
         assert parsing_time < 1.0, f"Parsing took {parsing_time:.2f}s, should be under 1s"
         assert config is not None, "Configuration loaded successfully"
 
-    def test_should_filter_features_within_5_seconds_when_performance_tested(self, capymoa_service, sample_toml_configs, tmp_path):
+    def test_should_filter_features_within_5_seconds_when_performance_tested(self, capymoa_interface_mock, sample_toml_configs, tmp_path):
         """Test REQ-014: Feature filtering operations complete in <5 seconds for large datasets."""
         import tempfile
 
@@ -146,7 +146,7 @@ class TestErrorHandlingAndLogging:
 class TestReproducibilityAndTesting:
     """Test deterministic dataset generation functionality (REQ-016)."""
 
-    def test_should_generate_identical_datasets_when_same_config_and_seed_used(self, capymoa_service, sample_toml_configs):
+    def test_should_generate_identical_datasets_when_same_config_and_seed_used(self, capymoa_interface_mock, sample_toml_configs):
         """Test REQ-016: Deterministic dataset generation with same configuration and random seed."""
         import numpy as np
 
@@ -182,7 +182,7 @@ class TestUsabilityAndDocumentation:
         assert hasattr(dataset, "y"), "Dataset has targets"
         assert hasattr(dataset, "drift_metadata"), "Dataset has drift metadata"
 
-    def test_should_provide_convenience_methods_when_accessing_features(self, capymoa_service, sample_toml_configs):
+    def test_should_provide_convenience_methods_when_accessing_features(self, capymoa_interface_mock, sample_toml_configs):
         """Test REQ-018: Convenience methods for feature access without manual filtering."""
         from drift_datasets import create_dataset
 
@@ -201,7 +201,7 @@ class TestUsabilityAndDocumentation:
 class TestFeatureDiscoveryAndInspection:
     """Test feature discovery and inspection functionality (REQ-019)."""
 
-    def test_should_provide_feature_summary_when_inspecting_dataset(self, capymoa_service, sample_toml_configs):
+    def test_should_provide_feature_summary_when_inspecting_dataset(self, capymoa_interface_mock, sample_toml_configs):
         """Test REQ-019: summarize_features() returns comprehensive feature overview."""
         from drift_datasets import create_dataset
 

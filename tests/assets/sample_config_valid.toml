@@ -1,0 +1,35 @@
+[dataset]
+    name      = "test_sine"
+    type      = "synthetic"
+    source    = "capymoa"
+    generator = "SineGenerator"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+
+[[features]]
+    name = "feature_0"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_1"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "target"
+    type = "categorical"
+    role = "target"
+
+[generator_config]
+    n_instances             = 1000
+    classification_function = 1
+    random_seed             = 42
+
+[drift_config]
+    drift_points   = [500]
+    drift_types    = ["concept"]
+    drift_patterns = ["abrupt"]

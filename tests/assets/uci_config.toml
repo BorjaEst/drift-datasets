@@ -1,0 +1,39 @@
+[dataset]
+    name   = "test_electricity"
+    type   = "real_world"
+    source = "ucimlrepo"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+
+[[features]]
+    name = "date"
+    type = "continuous"
+    role = "timestamp"
+
+[[features]]
+    name = "demand"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "price"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "class"
+    type = "categorical"
+    role = "target"
+
+[uci_config]
+    dataset_id    = 321
+    preprocessing = ["normalize", "temporal_order"]
+
+[drift_config]
+    drift_points     = [400, 800]
+    drift_types      = ["covariate", "concept"]
+    drift_patterns   = ["gradual", "abrupt"]
+    drift_simulation = "concept_shift"

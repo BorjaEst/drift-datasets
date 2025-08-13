@@ -12,7 +12,7 @@ class TestMixedDatasetCombination:
     """Test mixed dataset combination functionality (REQ-003)."""
 
     def test_should_combine_synthetic_and_real_world_datasets_when_mixed_config_provided(
-        self, capymoa_service, uci_repository_service, sample_toml_configs
+        self, capymoa_interface_mock, uci_repository_service, sample_toml_configs
     ):
         """Test REQ-003: Combine multiple data sources into unified datasets."""
         from drift_datasets import create_dataset
@@ -32,7 +32,9 @@ class TestMixedDatasetCombination:
         assert dataset.X.dtypes is not None, "Data types consistent across components"
         assert len(dataset.X) == len(dataset.y), "Features and targets have matching lengths"
 
-    def test_should_preserve_drift_metadata_when_combining_datasets(self, capymoa_service, uci_repository_service, sample_toml_configs):
+    def test_should_preserve_drift_metadata_when_combining_datasets(
+        self, capymoa_interface_mock, uci_repository_service, sample_toml_configs
+    ):
         """Test REQ-003: Preserve individual component metadata in unified structure."""
         from drift_datasets import create_dataset
 
@@ -52,7 +54,7 @@ class TestMixedDatasetCombination:
         assert isinstance(drift_points, list), "Drift points is a list"
 
     def test_should_generate_valid_drift_point_indices_when_combining_datasets(
-        self, capymoa_service, uci_repository_service, sample_toml_configs
+        self, capymoa_interface_mock, uci_repository_service, sample_toml_configs
     ):
         """Test REQ-003: Generate valid drift_points indices for combined dataset."""
         from drift_datasets import create_dataset
@@ -72,7 +74,7 @@ class TestMixedDatasetCombination:
             assert 0 <= drift_point < len(dataset.X), f"Drift point {drift_point} is valid index"
 
     def test_should_apply_consistent_drift_parameters_when_combining_datasets(
-        self, capymoa_service, uci_repository_service, sample_toml_configs
+        self, capymoa_interface_mock, uci_repository_service, sample_toml_configs
     ):
         """Test REQ-003: Apply consistent drift parameters across mixed components."""
         from drift_datasets import create_dataset

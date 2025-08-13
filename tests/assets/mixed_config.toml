@@ -1,0 +1,42 @@
+[dataset]
+    name = "test_mixed"
+    type = "mixed"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+
+[[features]]
+    name = "feature_0"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_1"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "target"
+    type = "categorical"
+    role = "target"
+
+[mixed_config]
+    combination_type = "sequential"
+    [[mixed_config.components]]
+        source      = "capymoa"
+        generator   = "SineGenerator"
+        n_instances = 500
+        weight      = 0.5
+
+    [[mixed_config.components]]
+        source      = "ucimlrepo"
+        dataset_id  = 321
+        n_instances = 500
+        weight      = 0.5
+
+[drift_config]
+    drift_points   = [250, 750]
+    drift_types    = ["concept", "covariate"]
+    drift_patterns = ["abrupt", "gradual"]

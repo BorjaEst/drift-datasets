@@ -1,0 +1,46 @@
+[dataset]
+    name      = "expertsystems_sine"
+    type      = "synthetic"
+    source    = "capymoa"
+    generator = "SineGenerator"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+
+[[features]]
+    name = "feature_0"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_1"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_2"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_3"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "target"
+    type = "categorical"
+    role = "target"
+
+[generator_config]
+    n_instances             = 50000
+    classification_function = 1
+    random_seed             = 42
+
+[drift_config]
+    drift_points     = [10000, 25000, 40000]
+    drift_types      = ["concept", "concept", "concept"]
+    drift_patterns   = ["abrupt", "abrupt", "abrupt"]
+    concept_reversal = true

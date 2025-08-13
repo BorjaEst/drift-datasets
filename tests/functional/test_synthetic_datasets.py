@@ -49,7 +49,7 @@ class TestSyntheticDatasetGeneration:
         # Assert: Hyperplane dataset characteristics
         assert dataset.name == "test_hyperplane"
         assert dataset.source_type == "synthetic"
-        assert dataset.X.shape[1] == 2, "Mock hyperplane dataset has 2 features"  # Updated to match mock
+        assert dataset.X.shape[1] == 10, "Hyperplane dataset has 10 features"  # Match config
         assert len(dataset.y) == 1000, "Correct number of instances"
 
         # Verify basic metadata structure
