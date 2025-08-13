@@ -1,16 +1,29 @@
+"""
+Drift Datasets Literals Module
+
+This module provides type literal definitions for the Drift Datasets package.
+It includes type definitions for logging levels, drift simulation types, feature characteristics,
+dataset classifications, synthetic data generators, preprocessing options, and methods for simulating drift.
+The literals ensure consistent usage of string values throughout the application.
+"""
+
 from typing import Literal
+
+# Log levels
+LogLevel = Literal["debug", "info", "warning", "error", "critical"]
 
 # Drift classification types
 DriftType = Literal["covariate", "concept", "prior", "none"]
 DriftPattern = Literal["abrupt", "gradual", "recurring", "incremental"]
 
-# Data types
-DataType = Literal["continuous", "categorical", "mixed"]
-DataDimension = Literal["univariate", "multivariate"]
-DataLabeling = Literal["supervised", "unsupervised", "semi-supervised"]
+# Feature types
+FeatureType = Literal["continuous", "categorical", "mixed"]
+FeatureRole = Literal["feature", "target", "timestamp", "identifier", "metadata", "exclude"]
 
 # Dataset types
 DatasetType = Literal["synthetic", "real_world", "mixed"]
+DatasetDimension = Literal["univariate", "multivariate"]
+DatasetLabeling = Literal["supervised", "unsupervised", "semi-supervised"]
 DatasetSource = Literal["capymoa", "ucimlrepo"]
 
 # Synthetic data generators (CapyMOA)
@@ -48,6 +61,3 @@ MixedCombinationType = Literal[
     "interleaved",
     "hierarchical",
 ]
-
-# Log levels
-LogLevel = Literal["debug", "info", "warning", "error", "critical"]
