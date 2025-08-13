@@ -9,7 +9,8 @@ from .config import ConfigurationManager, ParameterValidator
 from .data_sources import UCIRepository, UCIService
 from .factory import create_dataset
 from .models import DriftDataset
+from .plotting import plot_dataset
 
 __version__ = "0.1.0"
 
-__all__ = ["create_dataset", "DriftDataset", "ConfigurationManager", "ParameterValidator", "UCIRepository", "UCIService"]
+__all__ = ["create_dataset", "DriftDataset", "ConfigurationManager", "ParameterValidator", "UCIRepository", "UCIService", "plot_dataset"]

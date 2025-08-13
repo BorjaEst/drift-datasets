@@ -40,6 +40,7 @@ Different studies use varying base learners, datasets, metrics, and comparison m
 - **Research Parameter Translation**: Automatically convert research-friendly parameters to implementation parameters
 - **ExpertSystems Compatibility**: Full support for reproducing comparative drift detection studies
 - **TOML Configuration**: Reproducible dataset generation through simple configuration files
+- **Visualization**: Built-in plotting functions to visualize datasets with drift point annotations
 
 ## Architecture
 
@@ -236,6 +237,41 @@ train, test = dataset.split_temporal(ratio=0.7)
 # Feature filtering by role/type
 continuous = dataset.get_continuous_features()
 targets_only = dataset.get_features_by_role("target")
+
+# Visualization
+fig = drift_datasets.plot_dataset(dataset, show_drift_points=True, color_by_target=True)
+fig.show()  # Display plot
+```
+
+### Visualization
+
+Visualize datasets with drift point annotations:
+
+```python
+# Basic plot with automatic type selection
+fig = drift_datasets.plot_dataset(dataset)
+
+# Scatter plot with drift points and target coloring
+fig = drift_datasets.plot_dataset(
+    dataset, 
+    plot_type="scatter",
+    show_drift_points=True,
+    color_by_target=True
+)
+
+# Time series plot showing features over time
+fig = drift_datasets.plot_dataset(
+    dataset,
+    plot_type="time_series", 
+    show_drift_points=True,
+    show_concept_segments=True
+)
+
+# Save to file
+fig = drift_datasets.plot_dataset(
+    dataset,
+    save_path="dataset_visualization.png"
+)
 ```
 
 ### Common Patterns

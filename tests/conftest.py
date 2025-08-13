@@ -392,16 +392,17 @@ def sample_drift_dataset():
     Function-scoped for safety - each test should get its own independent
     dataset instance to prevent test interference.
     """
-    # This will be imported once the DriftDataset class is implemented
-    # For now, return a mock structure
-    return {
-        "X": pd.DataFrame(
-            {"feature_0": np.random.RandomState(42).normal(0, 1, 1000), "feature_1": np.random.RandomState(42).normal(0, 1, 1000)}
-        ),
-        "y": pd.Series(np.random.RandomState(42).randint(0, 2, 1000), name="target"),
-        "name": "test_dataset",
-        "source_type": "synthetic",
-        "drift_metadata": {
+    from drift_datasets.models import DriftDataset
+
+    X = pd.DataFrame({"feature_0": np.random.RandomState(42).normal(0, 1, 1000), "feature_1": np.random.RandomState(42).normal(0, 1, 1000)})
+    y = pd.Series(np.random.RandomState(42).randint(0, 2, 1000), name="target")
+
+    return DriftDataset(
+        X=X,
+        y=y,
+        name="test_dataset",
+        source_type="synthetic",
+        drift_metadata={
             "drift_points": [500],
             "drift_types": ["concept"],
             "drift_patterns": ["abrupt"],
@@ -409,17 +410,21 @@ def sample_drift_dataset():
             "transition_durations": [0],
             "drift_intensities": [1.0],
         },
-        "dataset_metadata": {
+        dataset_metadata={
+            "name": "test_dataset",
+            "source_type": "synthetic",
+            "n_samples": 1000,
+            "n_features": 2,
+            "n_classes": 2,
             "dimension": "multivariate",
             "labeling": "supervised",
-            "n_classes": 2,
             "features": [
                 {"name": "feature_0", "type": "continuous", "role": "feature"},
                 {"name": "feature_1", "type": "continuous", "role": "feature"},
                 {"name": "target", "type": "categorical", "role": "target"},
             ],
         },
-    }
+    )
 
 
 @pytest.fixture(scope="session")
