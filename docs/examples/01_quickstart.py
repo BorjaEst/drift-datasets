@@ -36,7 +36,7 @@ def main():
     print(f"✓ Dataset generated: {dataset.name}")
     print(f"  - Shape: {dataset.X.shape}")
     print(f"  - Target shape: {dataset.y.shape}")
-    print(f"  - Drift points: {dataset.metadata['drift_points']}")
+    print(f"  - Drift points: {dataset.drift_metadata.drift_points}")
 
     # Step 3: Access and explore the data
     print("\nStep 3: Exploring dataset...")
@@ -50,7 +50,7 @@ def main():
     print(f"✓ Feature analysis completed for {len(description['features'])} features")
 
     # Drift detection features (excludes targets, timestamps, etc.)
-    modeling_features = dataset.get_modeling_features()
+    modeling_features = dataset.get_drift_detection_features()
     print(f"✓ Modeling features: {list(modeling_features.columns)}")
 
     # Step 4: Check drift characteristics
@@ -87,9 +87,9 @@ def main():
     print(f"✓ Temporal split: train={train_dataset.X.shape}, test={test_dataset.X.shape}")
 
     # Get clean features for modeling
-    X_train = train_dataset.get_modeling_features()
+    X_train = train_dataset.get_drift_detection_features()
     y_train = train_dataset.y
-    X_test = test_dataset.get_modeling_features()
+    X_test = test_dataset.get_drift_detection_features()
     y_test = test_dataset.y
 
     print(f"✓ Training data prepared: X={X_train.shape}, y={y_train.shape}")
