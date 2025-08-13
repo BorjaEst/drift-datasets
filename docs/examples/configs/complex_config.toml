@@ -1,0 +1,204 @@
+# Complex Multi-Drift Configuration Example
+
+# This configuration demonstrates advanced drift scenarios with multiple
+# drift types, patterns, and complex temporal relationships.
+# Perfect for comprehensive drift detection algorithm evaluation.
+
+[dataset]
+    name        = "complex_multi_drift_scenario"
+    type        = "synthetic"
+    source      = "capymoa"
+    generator   = "HyperplaneGenerator"
+    description = "Complex scenario with 5 different drift types and patterns for comprehensive evaluation"
+
+[metadata]
+    dimension  = "multivariate"
+    labeling   = "supervised"
+    n_classes  = 2
+    temporal   = true
+    domain     = "synthetic_evaluation"
+    complexity = "high"
+
+# Define 8 features with different characteristics
+[[features]]
+    name              = "feature_1"
+    type              = "continuous"
+    role              = "feature"
+    description       = "Primary feature - high drift sensitivity"
+    drift_sensitivity = "high"
+
+[[features]]
+    name              = "feature_2"
+    type              = "continuous"
+    role              = "feature"
+    description       = "Secondary feature - medium drift sensitivity"
+    drift_sensitivity = "medium"
+
+[[features]]
+    name              = "feature_3"
+    type              = "continuous"
+    role              = "feature"
+    description       = "Supporting feature - low drift sensitivity"
+    drift_sensitivity = "low"
+
+[[features]]
+    name              = "feature_4"
+    type              = "continuous"
+    role              = "feature"
+    description       = "Noise feature - stable throughout"
+    drift_sensitivity = "none"
+
+[[features]]
+    name              = "feature_5"
+    type              = "continuous"
+    role              = "feature"
+    description       = "Covariate feature - subject to covariate drift"
+    drift_sensitivity = "covariate"
+
+[[features]]
+    name              = "feature_6"
+    type              = "continuous"
+    role              = "feature"
+    description       = "Interaction feature - affects feature interactions"
+    drift_sensitivity = "interaction"
+
+[[features]]
+    name              = "feature_7"
+    type              = "continuous"
+    role              = "feature"
+    description       = "Delayed feature - drift effects appear later"
+    drift_sensitivity = "delayed"
+
+[[features]]
+    name              = "feature_8"
+    type              = "continuous"
+    role              = "feature"
+    description       = "Cyclic feature - participates in recurring drift"
+    drift_sensitivity = "cyclic"
+
+[[features]]
+    name        = "target"
+    type        = "categorical"
+    role        = "target"
+    description = "Binary classification target"
+
+[generator_config]
+    n_instances           = 100000
+    n_dimensions          = 8
+    n_drifting_dimensions = 6 # Not all features drift
+    noise_percentage      = 0.05
+    magnitude_change      = 0.3
+    sigma_percentage      = 0.1
+    random_seed           = 42
+
+# Complex drift configuration with 5 different drift events
+[drift_config]
+    drift_points   = [15000, 30000, 50000, 70000, 85000]
+    drift_types    = ["concept", "covariate", "concept", "prior", "mixed"]
+    drift_patterns = ["abrupt", "gradual", "continuous_gradual", "intermittent_gradual", "recurring"]
+
+    # Detailed drift specifications
+    transition_durations = [0, 2000, 5000, 1500, 0] # 0 = abrupt, >0 = gradual
+    drift_intensities    = [0.8, 0.4, 0.6, 0.3, 0.9] # Strength of each drift
+    stability_periods    = [true, true, false, true, true] # Whether concepts are stable
+
+# Advanced drift parameters
+[[drift_events]]
+    drift_point         = 15000
+    type                = "concept"
+    pattern             = "abrupt"
+    description         = "Sudden concept reversal - classification boundary flips"
+    affected_features   = ["feature_1", "feature_2", "feature_3"]
+    intensity           = 0.8
+    transition_duration = 0
+
+[[drift_events]]
+    drift_point          = 30000
+    type                 = "covariate"
+    pattern              = "gradual"
+    description          = "Gradual shift in feature distributions"
+    affected_features    = ["feature_5", "feature_6"]
+    intensity            = 0.4
+    transition_duration  = 2000
+    covariate_shift_type = "mean_shift"
+    shift_parameters     = { mean_delta = [0.5, -0.3], variance_ratio = [1.2, 0.8] }
+
+[[drift_events]]
+    drift_point       = 50000
+    type              = "concept"
+    pattern           = "continuous_gradual"
+    description       = "Continuous rotation of hyperplane - no stable periods"
+    affected_features = ["feature_1", "feature_2", "feature_3", "feature_4"]
+    intensity         = 0.6
+    rotation_speed    = 0.001
+    continuous_change = true
+
+[[drift_events]]
+    drift_point         = 70000
+    type                = "prior"
+    pattern             = "intermittent_gradual"
+    description         = "Intermittent changes in class prior probabilities"
+    intensity           = 0.3
+    transition_duration = 1500
+    stable_duration     = 3000
+    prior_shift         = { class_0 = 0.3, class_1 = 0.7 }
+
+[[drift_events]]
+    drift_point       = 85000
+    type              = "mixed"
+    pattern           = "recurring"
+    description       = "Return to earlier concept with modifications"
+    affected_features = ["feature_1", "feature_2", "feature_7", "feature_8"]
+    intensity         = 0.9
+    recurrence_target = 0 # Recur to concept from drift event 0
+    modifications     = { noise_increase = 0.1, boundary_shift = 0.2 }
+
+# Evaluation and validation parameters
+[evaluation]
+    validation_windows    = [1000, 2000, 5000] # Different window sizes for evaluation
+    ground_truth_tracking = true
+    concept_tracking      = true
+    performance_tracking  = true
+
+    # Drift detection evaluation metrics
+    drift_detection_tolerance = 250 # Acceptable delay in drift detection
+    false_positive_penalty    = 1.0
+    false_negative_penalty    = 2.0
+    detection_delay_penalty   = 0.1
+
+# Export and analysis configuration
+[export]
+    formats              = ["csv", "arff", "json"]
+    include_metadata     = true
+    include_ground_truth = true
+    include_timestamps   = true
+    chunk_size           = 10000 # For memory-efficient processing
+
+[analysis]
+    feature_importance_tracking = true
+    concept_evolution_analysis  = true
+    drift_magnitude_analysis    = true
+    statistical_tests           = ["ks_test", "chi_square", "wilcoxon"]
+
+# Research and reproducibility
+[research]
+    paper_reference      = "Complex multi-drift evaluation benchmark"
+    reproducibility_seed = 42
+    version              = "1.0.0"
+    author               = "drift-datasets-examples"
+    creation_date        = "2025-08-13"
+
+# Quality assurance
+[validation]
+    data_quality_checks          = true
+    drift_consistency_checks     = true
+    feature_correlation_analysis = true
+    outlier_detection            = true
+    missing_value_handling       = "none" # No missing values in synthetic data
+
+# Performance optimization
+[performance]
+    memory_efficient    = true
+    parallel_generation = false # Set to true if multiprocessing is desired
+    cache_intermediate  = false
+    lazy_evaluation     = false
