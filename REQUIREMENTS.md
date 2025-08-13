@@ -242,3 +242,62 @@
 - Human-readable descriptions for all features when available
 - Clear indication of which features are suitable for modeling
 - Validation of feature metadata consistency with actual data
+
+## Advanced Dataset Generation Requirements (ExpertSystems Paper Compatibility)
+
+### REQ-020: Hyperplane Dataset Generation
+
+**Description**: System shall generate rotating hyperplane datasets with configurable dimensions and rotation parameters for continuous concept drift scenarios.
+**Acceptance Criteria**:
+
+- Support d-dimensional hyperplane space configuration (configurable dimensionality)
+- Control number of drifting attributes independently from total dimensions
+- Specify rotation speed/angle parameters for continuous drift behavior
+- Configure noise percentage (e.g., 5% as used in ExpertSystems paper)
+- Generate two-class classification with linear separation boundary that rotates over time
+- Support both abrupt rotation (instant hyperplane jump) and gradual rotation (smooth transition)
+- Maintain CapyMOA HyperplaneGenerator compatibility while exposing research-friendly parameters
+- Generate datasets matching ExpertSystems configurations: Hyp(0.1) and Hyp(0.001) rotation speeds
+
+### REQ-021: Mixed Attribute Dataset Generation
+
+**Description**: System shall generate datasets with mixed boolean and numerical attributes with verification conditions for complex concept drift patterns.
+**Acceptance Criteria**:
+
+- Support mixed attribute type specifications (boolean + numerical combinations)
+- Define verification condition logic for classification rules (three conditions as in ExpertSystems)
+- Control gradual probability changes between stable concept periods
+- Support intermittent drift with stable concept segments (distinct from continuous drift)
+- Configure attribute interaction rules and dependencies
+- Generate datasets with 2 boolean + 2 numerical attributes matching ExpertSystems specifications
+- Support configurations Mixed(200) and Mixed(1000) representing different stability periods
+- Implement probabilistic concept transitions with configurable change rates
+
+### REQ-022: Enhanced Drift Pattern Specification
+
+**Description**: System shall support fine-grained drift pattern control matching research literature classifications and ExpertSystems methodology.
+**Acceptance Criteria**:
+
+- Distinguish "continuous" drift (no stable periods) vs "intermittent" drift (stable periods between changes)
+- Support concept reversal patterns (e.g., Sine dataset classification reversal after each drift)
+- Control transition speed independently from transition duration
+- Specify affected attribute subsets for each drift point with granular control
+- Support concept recurrence patterns (return to previous concepts)
+- Implement "combined drift" (virtual + real concept drift occurring together)
+- Map research terminology to implementation: abrupt → instant change, gradual-continuous → smooth ongoing change, gradual-intermittent → smooth change with stable periods
+- Support ExpertSystems paper patterns: Sine/STAGGER abrupt drifts, Hyperplane continuous gradual drift, Mixed intermittent gradual drift
+
+### REQ-023: Research Parameter Translation
+
+**Description**: System shall translate research-level drift specifications to CapyMOA parameters automatically while maintaining research usability and reproducibility.
+**Acceptance Criteria**:
+
+- Map "continuous gradual drift" → appropriate CapyMOA width/alpha parameter combinations
+- Convert "transition duration" (research parameter) → CapyMOA width values automatically
+- Translate "drift intensity" (research parameter) → CapyMOA alpha parameter ranges
+- Provide research-friendly parameter names (transition_duration, drift_intensity, concept_stability) while maintaining CapyMOA compatibility
+- Support parameter validation ensuring research parameters produce valid CapyMOA configurations
+- Document parameter translation methodology with examples from ExpertSystems paper
+- Implement automatic parameter conversion: research config → internal CapyMOA parameters → consistent drift behavior
+- Support ExpertSystems configurations through research parameters: concept reversal, rotation speed specification, probability change rates
+- Maintain backward compatibility with direct CapyMOA parameter specification (drift_widths, drift_alphas) for advanced users
