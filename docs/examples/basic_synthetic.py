@@ -43,15 +43,13 @@ def create_basic_sine_dataset():
         "generator_config": {
             "n_instances": 10000,
             "classification_function": 1,
-            "has_noise": False,
-            "balance_classes": True,
+            "noise_level": 0.0,
             "random_seed": 42,
         },
         "drift_config": {
             "drift_points": [2500, 5000, 7500],
             "drift_types": ["concept", "concept", "concept"],
             "drift_patterns": ["abrupt", "abrupt", "abrupt"],
-            "stable_periods": True,
         },
     }
 
@@ -107,9 +105,9 @@ def visualize_dataset(dataset):
 
     # Plot 1: Feature space colored by class
     ax1 = axes[0, 0]
-    scatter = ax1.scatter(X["x"], X["y"], c=y, alpha=0.6, cmap="viridis", s=1)
-    ax1.set_xlabel("X (sine)")
-    ax1.set_ylabel("Y (cosine)")
+    scatter = ax1.scatter(X["feature_0"], X["feature_1"], c=y, alpha=0.6, cmap="viridis", s=1)
+    ax1.set_xlabel("Feature 0")
+    ax1.set_ylabel("Feature 1")
     ax1.set_title("Feature Space (colored by class)")
     plt.colorbar(scatter, ax=ax1, label="Class")
     ax1.grid(True, alpha=0.3)
@@ -117,8 +115,8 @@ def visualize_dataset(dataset):
     # Plot 2: Time series of features with drift points
     ax2 = axes[0, 1]
     sample_indices = np.arange(len(X))
-    ax2.plot(sample_indices, X["x"], label="X feature", alpha=0.7, linewidth=0.5)
-    ax2.plot(sample_indices, X["y"], label="Y feature", alpha=0.7, linewidth=0.5)
+    ax2.plot(sample_indices, X["feature_0"], label="Feature 0", alpha=0.7, linewidth=0.5)
+    ax2.plot(sample_indices, X["feature_1"], label="Feature 1", alpha=0.7, linewidth=0.5)
 
     # Mark drift points
     for i, drift_point in enumerate(drift_points):

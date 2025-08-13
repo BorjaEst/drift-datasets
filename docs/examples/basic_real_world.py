@@ -88,27 +88,26 @@ def inject_synthetic_drift(dataset):
 
     print("\n🔄 Injecting synthetic drift into real-world dataset...")
 
-    # Configuration for drift injection
-    drift_config = {
-        "dataset": {"name": "iris_with_drift", "type": "mixed", "description": "Iris dataset with synthetic drift injection"},
-        "metadata": {
-            "dimension": "multivariate",
-            "labeling": "supervised",
-            "n_classes": 3,
-            "temporal": True,  # Now has temporal dimension due to drift
-        },
-        "real_world_config": {"base_dataset": dataset, "repeat_factor": 10},  # Repeat the dataset 10 times for more samples
-        "drift_config": {
-            "drift_points": [300, 600, 900, 1200],
-            "drift_types": ["covariate", "concept", "covariate", "prior"],
-            "drift_patterns": ["gradual", "abrupt", "gradual", "abrupt"],
-            "transition_durations": [50, 0, 75, 0],
-            "drift_intensities": [0.3, 0.8, 0.4, 0.6],
-        },
-    }
+    # Create an extended version of the original dataset by repeating it
+    # This simulates a temporal stream where the same patterns repeat over time
+    original_X = dataset.X
+    original_y = dataset.y
 
-    # Create dataset with injected drift
-    drift_dataset = dd.create_dataset(drift_config)
+    # Repeat the dataset multiple times to create a larger temporal sequence
+    repeat_factor = 10
+    X_extended = pd.concat([original_X] * repeat_factor, ignore_index=True)
+    y_extended = pd.concat([original_y] * repeat_factor, ignore_index=True)
+
+    print(f"   Extended dataset from {original_X.shape} to {X_extended.shape}")
+
+    # Define drift points within the extended dataset size
+    drift_points = [300, 600, 900, 1200]
+    drift_types = ["covariate", "concept", "covariate", "prior"]
+    drift_patterns = ["gradual", "abrupt", "gradual", "abrupt"]
+    drift_intensities = [0.3, 0.8, 0.4, 0.6]
+
+    # Create the drift-injected dataset directly
+    drift_dataset = create_iris_with_simulated_drift(X_extended, y_extended, drift_points, drift_types, drift_patterns, drift_intensities)
 
     print(f"✅ Drift injection completed!")
     print(f"   New shape: {drift_dataset.X.shape}")
@@ -116,6 +115,61 @@ def inject_synthetic_drift(dataset):
     print(f"   Drift types: {drift_dataset.drift_metadata.drift_types}")
 
     return drift_dataset
+
+
+def create_iris_with_simulated_drift(X_extended, y_extended, drift_points, drift_types, drift_patterns, drift_intensities):
+    """Create a simulated drift dataset for demonstration purposes."""
+    from drift_datasets.models import DriftDataset
+
+    # Apply simulated drift effects to demonstrate the concept
+    X_drift = X_extended.copy()
+    y_drift = y_extended.copy()
+
+    # Simple drift simulation: add noise/scaling to different segments
+    for i, (drift_point, drift_type, intensity) in enumerate(zip(drift_points, drift_types, drift_intensities)):
+        start_idx = drift_point
+        end_idx = drift_points[i + 1] if i + 1 < len(drift_points) else len(X_drift)
+
+        if drift_type == "covariate":
+            # Shift feature distributions
+            noise_scale = intensity * 0.5
+            X_drift.iloc[start_idx:end_idx] += np.random.normal(0, noise_scale, (end_idx - start_idx, X_drift.shape[1]))
+        elif drift_type == "concept":
+            # Simulate concept drift by slightly modifying the relationship
+            # For demonstration: add some systematic bias to certain classes
+            affected_mask = y_drift.iloc[start_idx:end_idx] == "Iris-versicolor"
+            if affected_mask.any():
+                # Use proper indexing to avoid chained assignment warning
+                affected_indices = y_drift.iloc[start_idx:end_idx][affected_mask].index
+                X_drift.loc[affected_indices] *= 1 + intensity * 0.2
+
+    # Build drift metadata
+    drift_metadata = {
+        "drift_points": drift_points,
+        "drift_types": drift_types,
+        "drift_patterns": drift_patterns,
+        "drift_intensities": drift_intensities,
+    }
+
+    # Build dataset metadata
+    dataset_metadata = {
+        "source": "simulated_drift",
+        "base_dataset": "iris",
+        "features": [{"name": col, "type": "continuous", "role": "feature"} for col in X_drift.columns]
+        + [{"name": y_drift.name, "type": "categorical", "role": "target"}],
+        "dimension": "multivariate",
+        "labeling": "supervised",
+        "n_classes": len(y_drift.unique()),
+    }
+
+    return DriftDataset(
+        X=X_drift,
+        y=y_drift,
+        name="iris_with_drift",
+        source_type="real_world",  # Use valid source_type
+        drift_metadata=drift_metadata,
+        dataset_metadata=dataset_metadata,
+    )
 
 
 def visualize_real_world_dataset(original_dataset, drift_dataset=None):

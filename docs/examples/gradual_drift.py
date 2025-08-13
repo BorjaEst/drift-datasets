@@ -44,9 +44,7 @@ def create_gradual_drift_dataset():
         ],
         "generator_config": {
             "n_instances": 20000,
-            "n_dimensions": 5,
-            "n_drifting_dimensions": 3,
-            "noise_percentage": 0.1,
+            "n_features": 5,
             "random_seed": 42,
         },
         "drift_config": {

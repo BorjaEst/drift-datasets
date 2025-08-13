@@ -47,16 +47,13 @@ def create_analysis_dataset():
         + [{"name": "target", "type": "categorical", "role": "target"}],
         "generator_config": {
             "n_instances": 15000,
-            "n_dimensions": 6,
-            "n_drifting_dimensions": 4,
-            "noise_percentage": 0.08,
+            "n_features": 6,
             "random_seed": 42,
         },
         "drift_config": {
             "drift_points": [3000, 6000, 9000, 12000],
             "drift_types": ["concept", "covariate", "concept", "prior"],
-            "drift_patterns": ["abrupt", "gradual", "abrupt", "intermittent_gradual"],
-            "transition_durations": [0, 800, 0, 400],
+            "drift_patterns": ["abrupt", "gradual", "abrupt", "abrupt"],
             "drift_intensities": [0.7, 0.4, 0.9, 0.3],
         },
     }
@@ -175,7 +172,10 @@ def analyze_drift_events(dataset, metrics_df):
     drift_points = dataset.drift_metadata.drift_points
     drift_types = dataset.drift_metadata.drift_types
     drift_patterns = dataset.drift_metadata.drift_patterns
-    transition_durations = dataset.drift_metadata.transition_durations
+    # Ensure transition_durations has the same length as drift_points
+    transition_durations = dataset.drift_metadata.get("transition_durations", [])
+    if len(transition_durations) != len(drift_points):
+        transition_durations = [0] * len(drift_points)
 
     event_analysis = []
 
@@ -233,6 +233,11 @@ def create_comprehensive_visualizations(dataset, metrics_df, event_analysis):
     y = dataset.y
     drift_points = dataset.drift_metadata.drift_points
     drift_types = dataset.drift_metadata.drift_types
+    drift_patterns = dataset.drift_metadata.drift_patterns
+    # Ensure transition_durations has the same length as drift_points
+    transition_durations = dataset.drift_metadata.get("transition_durations", [])
+    if len(transition_durations) != len(drift_points):
+        transition_durations = [0] * len(drift_points)
     sample_indices = np.arange(len(X))
 
     # Color scheme for drift types
@@ -615,7 +620,7 @@ def export_analysis_results(dataset, metrics_df, event_analysis):
             "drift_points": dataset.drift_metadata.drift_points,
             "drift_types": dataset.drift_metadata.drift_types,
             "drift_patterns": dataset.drift_metadata.drift_patterns,
-            "transition_durations": dataset.drift_metadata.transition_durations,
+            "transition_durations": dataset.drift_metadata.get("transition_durations", [0] * len(dataset.drift_metadata.drift_points)),
         },
         "analysis_summary": {
             "max_statistical_distance": float(metrics_df["statistical_distance"].max()),
