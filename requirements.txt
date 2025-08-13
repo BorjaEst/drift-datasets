@@ -1,4 +1,5 @@
 # Core dependencies for drift-datasets
+pydantic ~= 2.10.3
 pydantic-settings ~= 2.7.1
 capymoa~=0.10.0
 ucimlrepo~=0.0.7
