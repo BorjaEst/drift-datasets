@@ -1,6 +1,11 @@
 # Core dependencies for drift-datasets
+pydantic-settings ~= 2.7.1
 capymoa~=0.10.0
 ucimlrepo~=0.0.7
-numpy~=2.2.0
-pandas~=2.3.0
+numpy ~= 1.26.4
+pandas ~= 2.2.3
 scipy~=1.15.0
+pyarrow>=10.0,<18.0
+rich ~= 13.9.4
+rich-argparse ~= 1.7.0
+toml~=0.10.0
