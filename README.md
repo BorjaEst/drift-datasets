@@ -146,7 +146,7 @@ drift_patterns = ["abrupt"]
 import drift_datasets
 
 # Load configuration and generate dataset
-dataset = drift_datasets.create_drift_dataset("my_dataset.toml")
+dataset = drift_datasets.create_dataset("my_dataset.toml")
 
 # Access data
 print(f"Dataset shape: {dataset.X.shape}")
@@ -198,7 +198,7 @@ The library uses TOML configuration files with no environment variables required
 import drift_datasets
 
 # Basic synthetic dataset
-dataset = drift_datasets.create_drift_dataset("config.toml")
+dataset = drift_datasets.create_dataset("config.toml")
 
 # Access data components
 X = dataset.X                    # Feature matrix (pandas.DataFrame)
@@ -330,7 +330,7 @@ dataset.to_parquet("output.parquet")     # Efficient binary format
 
 ```python
 # Generate dataset with known drift points
-dataset = drift_datasets.create_drift_dataset({
+dataset = drift_datasets.create_dataset({
     "dataset": {"name": "evaluation_set", "type": "synthetic", 
                 "source": "capymoa", "generator": "HyperplaneGenerator"},
     "generator_config": {"n_instances": 10000, "n_features": 10, "random_seed": 123},
@@ -369,7 +369,7 @@ sine_config = {
     }
 }
 
-sine_dataset = drift_datasets.create_drift_dataset(sine_config)
+sine_dataset = drift_datasets.create_dataset(sine_config)
 
 # Reproduce Hyperplane dataset with continuous gradual drift
 hyp_config = {
@@ -384,7 +384,7 @@ hyp_config = {
     }
 }
 
-hyp_dataset = drift_datasets.create_drift_dataset(hyp_config)
+hyp_dataset = drift_datasets.create_dataset(hyp_config)
 ```
 
 ## Testing
@@ -502,7 +502,7 @@ logging.getLogger('drift_datasets').setLevel(logging.DEBUG)
 # Profile generation time
 import time
 start = time.time()
-dataset = drift_datasets.create_drift_dataset(config)
+dataset = drift_datasets.create_dataset(config)
 print(f"Generation took {time.time() - start:.2f} seconds")
 ```
 
@@ -769,7 +769,7 @@ config["generator_config"]["n_instances"] = 100000  # Instead of 1000000
 import drift_datasets as dd
 
 # Load dataset from configuration
-dataset = dd.create_drift_dataset("synthetic_sine.toml")
+dataset = dd.create_dataset("synthetic_sine.toml")
 
 # Explore dataset structure
 print(f"Dataset: {dataset.name}")
@@ -1074,7 +1074,7 @@ Access to 400+ real-world datasets including:
 ### Main Entry Point
 
 ```python
-create_drift_dataset(config_path: str) -> DriftDataset
+create_dataset(config_path: str) -> DriftDataset
 ```
 
 Load dataset from TOML configuration file.
@@ -1155,7 +1155,7 @@ mypy src/
 src/drift_datasets/
 ├── __init__.py           # Main exports
 ├── literals.py           # Type literals and enums  
-├── factory.py           # create_drift_dataset() entry point
+├── factory.py           # create_dataset() entry point
 ├── models/              # Data model definitions
 ├── generators/          # Dataset generators (synthetic, real_world, mixed)
 └── utils/              # Configuration parsing and utilities

@@ -238,7 +238,7 @@
 **Description**: System shall provide user-friendly methods for common drift detection research workflows.
 **Acceptance Criteria**:
 
-- Single entry point: create_drift_dataset(config_path) -> DriftDataset
+- Single entry point: create_dataset(config_path) -> DriftDataset
 - Convenience methods for feature access without manual filtering
 - Self-documenting method names and parameters
 - Comprehensive docstrings with examples for all public methods
