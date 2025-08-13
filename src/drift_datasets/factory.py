@@ -9,10 +9,14 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
 import pandas as pd
+from rich.console import Console
 
 from .config import ConfigurationManager
+from .data_sources import UCIRepository
 from .generators import CapyMOAInterface
 from .models import DriftDataset
+
+console = Console()
 
 
 def create_dataset(config_path: Union[str, Path, Dict[str, Any]], **kwargs) -> DriftDataset:
@@ -107,52 +111,64 @@ def _create_synthetic_dataset(name: str, config: Dict[str, Any]) -> DriftDataset
 def _create_real_world_dataset(name: str, config: Dict[str, Any]) -> DriftDataset:
     """Create a real-world dataset from UCI repository."""
     uci_config = config.get("uci_config", {})
+    drift_config = config.get("drift_config", {})
     metadata_config = config.get("metadata", {})
 
-    # For now, create a mock electricity dataset
-    # This would be replaced with actual UCI integration
-    dataset_id = uci_config.get("dataset_id", 321)  # Electricity dataset
+    # Get dataset ID from configuration
+    dataset_id = uci_config.get("dataset_id")
+    if dataset_id is None:
+        raise ValueError("dataset_id is required in uci_config for real-world datasets")
 
-    # Mock data generation (replace with real UCI integration)
-    import numpy as np
+    # Initialize UCI repository and load dataset
+    uci_repository = UCIRepository()
 
-    np.random.seed(42)
+    try:
+        console.print(f"[blue]Loading UCI dataset {dataset_id}...[/blue]")
 
-    if dataset_id == 321:  # Electricity
-        # Generate electricity-like data
-        n_instances = 1000
-        X = pd.DataFrame(
-            {
-                "feature_0": np.random.normal(0, 1, n_instances),
-                "feature_1": np.random.normal(1, 0.5, n_instances),
-                "feature_2": np.random.uniform(-1, 1, n_instances),
-                "feature_3": np.random.exponential(1, n_instances),
-                "feature_4": np.random.gamma(2, 1, n_instances),
-                "feature_5": np.random.beta(2, 5, n_instances),
-                "feature_6": np.random.poisson(3, n_instances),
-                "feature_7": np.random.binomial(10, 0.3, n_instances),
-            }
-        )
-        y = pd.Series(np.random.choice([0, 1], n_instances, p=[0.6, 0.4]), name="target")
+        # Check if dataset is available
+        if not uci_repository.is_dataset_available(dataset_id):
+            raise ValueError(f"UCI dataset {dataset_id} is not available")
 
-    else:
-        raise ValueError(f"UCI dataset {dataset_id} not implemented yet")
+        # Fetch the dataset
+        data = uci_repository.fetch_dataset(dataset_id)
+        info = uci_repository.get_dataset_info(dataset_id)
 
-    # Build metadata
-    drift_metadata = {}  # Real-world datasets don't have ground truth drift
+        # Separate features and target
+        X = data.drop(columns=["target"])
+        y = data["target"]
 
+        console.print(f"[green]✓[/green] Successfully loaded UCI dataset: {info['name']}")
+
+    except Exception as e:
+        console.print(f"[red]✗[/red] Failed to load UCI dataset {dataset_id}: {e}")
+        raise ConnectionError(f"Unable to connect to UCI repository for dataset {dataset_id}: {e}")
+
+    # Build drift metadata (real-world datasets typically don't have ground truth drift)
+    drift_metadata = {
+        "drift_points": drift_config.get("drift_points", []),
+        "drift_types": drift_config.get("drift_types", []),
+        "drift_patterns": drift_config.get("drift_patterns", []),
+        "drift_intensities": drift_config.get("drift_intensities", []),
+    }
+
+    # Build dataset metadata
     dataset_metadata = {
+        "source": "uci",
         "uci_id": dataset_id,
         "uci_metadata": {
-            "dataset_name": "ElectricityLoadDiagrams20112014",
-            "repository_url": f"https://archive.ics.uci.edu/ml/datasets/{dataset_id}",
+            "dataset_name": info["name"],
+            "repository_url": info.get("url", f"https://archive.ics.uci.edu/dataset/{dataset_id}"),
+            "task": info["task"],
+            "original_n_instances": info.get("n_instances", len(X)),
+            "original_n_features": info.get("n_features", len(X.columns)),
         },
         "features": _build_feature_metadata(X, y),
         "dimension": "multivariate" if len(X.columns) > 1 else "univariate",
-        "labeling": "supervised",
-        "n_classes": len(y.unique()),
+        "labeling": "supervised" if info["task"] in ["classification", "regression"] else "unsupervised",
+        "n_classes": len(y.unique()) if info["task"] == "classification" else None,
     }
 
+    # Add any additional metadata from configuration
     dataset_metadata.update(metadata_config)
 
     return DriftDataset(X=X, y=y, name=name, source_type="real_world", drift_metadata=drift_metadata, dataset_metadata=dataset_metadata)
@@ -183,7 +199,7 @@ def _create_mixed_dataset(name: str, config: Dict[str, Any]) -> DriftDataset:
             }
             component_dataset = _create_synthetic_dataset(f"{name}_component_{i}", component_config)
         else:
-            # Assume UCI for now
+            # Real-world dataset component (UCI)
             component_config["uci_config"] = component.get("uci_config", {"dataset_id": 321})
             component_dataset = _create_real_world_dataset(f"{name}_component_{i}", component_config)
 
