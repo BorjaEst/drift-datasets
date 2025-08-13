@@ -1,0 +1,61 @@
+# ExpertSystems Real-World Dataset Configuration - Electricity
+# Reproduces the Electricity dataset from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - Real-world dataset from UCI repository (dataset_id = 321)
+# - Electricity pricing data with temporal patterns
+# - Binary classification (price up/down)
+# - Natural concept drift due to market changes
+
+[dataset]
+    name        = "expertsystems_electricity"
+    type        = "real_world"
+    source      = "ucimlrepo"
+    description = "Electricity pricing dataset from ExpertSystems study with natural concept drift"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+    temporal  = true
+    task_type = "classification"
+
+# Electricity dataset features (simplified for actual UCI structure)
+[[features]]
+    name        = "date"
+    type        = "continuous"
+    role        = "timestamp"
+    description = "Date timestamp"
+
+[[features]]
+    name        = "demand"
+    type        = "continuous"
+    role        = "feature"
+    description = "Electricity demand"
+
+[[features]]
+    name        = "price"
+    type        = "continuous"
+    role        = "feature"
+    description = "Electricity price"
+
+[[features]]
+    name        = "class"
+    type        = "categorical"
+    role        = "target"
+    description = "Price change direction (up/down)"
+
+# UCI dataset configuration
+[uci_config]
+    dataset_id    = 321
+    cache_data    = true
+    preprocessing = ["normalize", "temporal_order"]
+
+# Natural drift patterns (no artificial injection)
+[drift_config]
+    drift_points     = [400, 800]
+    drift_types      = ["covariate", "concept"]
+    drift_patterns   = ["gradual", "abrupt"]
+    drift_simulation = "concept_shift"
+    stable_periods   = false # Continuous natural variations

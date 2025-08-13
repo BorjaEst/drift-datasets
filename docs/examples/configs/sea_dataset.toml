@@ -1,0 +1,63 @@
+# ExpertSystems SEA Dataset Configuration
+# Reproduces the SEA dataset concept from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - SEA concept with threshold-based classification
+# - 3 continuous features with decision threshold
+# - Concept drift by changing decision threshold
+# - Abrupt drift pattern with stable periods
+
+[dataset]
+    name        = "expertsystems_sea"
+    type        = "synthetic"
+    source      = "capymoa"
+    generator   = "SEAGenerator"
+    description = "SEA dataset from ExpertSystems study with threshold-based concept drift"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+    temporal  = true
+    task_type = "classification"
+
+# SEA features: 3 continuous attributes
+[[features]]
+    name        = "feature_0"
+    type        = "continuous"
+    role        = "feature"
+    description = "First feature for SEA concept"
+
+[[features]]
+    name        = "feature_1"
+    type        = "continuous"
+    role        = "feature"
+    description = "Second feature for SEA concept"
+
+[[features]]
+    name        = "feature_2"
+    type        = "continuous"
+    role        = "feature"
+    description = "Third feature for SEA concept (noise)"
+
+[[features]]
+    name        = "target"
+    type        = "categorical"
+    role        = "target"
+    description = "Binary classification based on threshold rule"
+
+# Generator configuration for SEA concepts
+[generator_config]
+    n_instances = 50000
+    threshold   = 8.0 # Decision threshold for f1 + f2 <= threshold
+    random_seed = 42
+
+# Drift configuration: changing threshold values
+[drift_config]
+    drift_points         = [12500, 25000, 37500]
+    drift_types          = ["concept", "concept", "concept"]
+    drift_patterns       = ["abrupt", "abrupt", "abrupt"]
+    stable_periods       = true
+    transition_durations = [0, 0, 0] # Abrupt changes
+    concepts             = ["SEA_1", "SEA_2", "SEA_3", "SEA_4"]

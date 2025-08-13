@@ -1,0 +1,88 @@
+# ExpertSystems LED Dataset Configuration
+# Reproduces the LED dataset from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - LED display recognition with 7 boolean attributes
+# - 10 classes (digits 0-9)
+# - Noise injection affects irrelevant attributes
+# - Concept drift through changing noise patterns
+
+[dataset]
+    name        = "expertsystems_led"
+    type        = "synthetic"
+    source      = "capymoa"
+    generator   = "SineGenerator" # Use SineGenerator as LED is not yet implemented
+    description = "LED-style dataset from ExpertSystems study (using SineGenerator as substitute)"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2 # Changed from 10 to 2 for SineGenerator compatibility
+    temporal  = true
+    task_type = "classification"
+
+# LED-style features (using continuous instead of categorical for SineGenerator)
+[[features]]
+    name        = "feature_0"
+    type        = "continuous"
+    role        = "feature"
+    description = "LED-style feature 0"
+
+[[features]]
+    name        = "feature_1"
+    type        = "continuous"
+    role        = "feature"
+    description = "LED-style feature 1"
+
+[[features]]
+    name        = "feature_2"
+    type        = "continuous"
+    role        = "feature"
+    description = "LED-style feature 2"
+
+[[features]]
+    name        = "feature_3"
+    type        = "continuous"
+    role        = "feature"
+    description = "LED-style feature 3"
+
+[[features]]
+    name        = "feature_4"
+    type        = "continuous"
+    role        = "feature"
+    description = "LED-style feature 4"
+
+[[features]]
+    name        = "feature_5"
+    type        = "continuous"
+    role        = "feature"
+    description = "LED-style feature 5"
+
+[[features]]
+    name        = "feature_6"
+    type        = "continuous"
+    role        = "feature"
+    description = "LED-style feature 6"
+
+[[features]]
+    name        = "target"
+    type        = "categorical"
+    role        = "target"
+    description = "Binary classification target"
+
+# Generator configuration for LED-style digits (using SineGenerator)
+[generator_config]
+    n_instances             = 50000
+    classification_function = 1
+    noise_level             = 0.1 # 10% noise
+    random_seed             = 42
+
+# Drift configuration: changing noise patterns
+[drift_config]
+    drift_points         = [12500, 25000, 37500]
+    drift_types          = ["prior", "covariate", "prior"]
+    drift_patterns       = ["abrupt", "gradual", "abrupt"]
+    transition_durations = [0, 2500, 0]
+    noise_injection      = true
+    concepts             = ["Low_Noise", "Medium_Noise", "High_Noise", "Low_Noise"]

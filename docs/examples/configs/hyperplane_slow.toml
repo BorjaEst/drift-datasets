@@ -1,0 +1,94 @@
+# ExpertSystems Hyperplane Dataset Configuration - Slow Rotation
+# Reproduces the Hyperplane Hyp(0.001) dataset from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - 100,000 samples with continuous gradual drift (slow rotation)
+# - Binary classification in 10-dimensional space
+# - All 10 dimensions affected by drift (rotation)
+# - 5% noise injection
+# - No stable periods (continuous drift throughout)
+
+[dataset]
+    name        = "expertsystems_hyperplane_slow"
+    type        = "synthetic"
+    source      = "capymoa"
+    generator   = "HyperplaneGenerator"
+    description = "Slow rotating hyperplane Hyp(0.001) from ExpertSystems study with continuous gradual drift"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+    temporal  = true
+    task_type = "classification"
+
+# 10-dimensional feature space (all continuous)
+[[features]]
+    name = "feature_0"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_1"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_2"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_3"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_4"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_5"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_6"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_7"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_8"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_9"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name        = "target"
+    type        = "categorical"
+    role        = "target"
+    description = "Binary classification target"
+
+# Generator configuration for slow hyperplane rotation
+[generator_config]
+    n_instances = 100000
+    n_features  = 10
+    random_seed = 42
+
+# Continuous gradual drift configuration (slow rotation)
+[drift_config]
+    drift_points     = [25000, 50000, 75000]
+    drift_patterns   = ["gradual", "gradual", "gradual"]
+    drift_types      = ["concept", "concept", "concept"]
+    continuous_drift = true

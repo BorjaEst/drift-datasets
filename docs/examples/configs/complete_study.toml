@@ -1,0 +1,64 @@
+# ExpertSystems Complete Study Configuration Guide
+# This file serves as documentation for all Expert Systems datasets
+# Use individual configuration files for actual dataset generation
+
+[dataset]
+    name        = "expertsystems_complete_reference"
+    type        = "synthetic"
+    source      = "capymoa"
+    generator   = "SineGenerator" # Reference implementation
+    description = "Reference guide to ExpertSystems complete study datasets"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+    temporal  = true
+    task_type = "classification"
+
+# Reference features (not used for actual generation)
+[[features]]
+    name = "feature_0"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "feature_1"
+    type = "continuous"
+    role = "feature"
+
+[[features]]
+    name = "target"
+    type = "categorical"
+    role = "target"
+
+# Instructions for generating all ExpertSystems datasets
+[instructions]
+    title = "Expert Systems Comparative Study Dataset Collection"
+
+    # Individual dataset configurations available:
+    sine_dataset    = "docs/examples/configs/sine_dataset.toml"
+    hyperplane_slow = "docs/examples/configs/hyperplane_slow.toml"
+    hyperplane_fast = "docs/examples/configs/hyperplane_fast.toml"
+    stagger_dataset = "docs/examples/configs/stagger_dataset.toml"
+    mixed_dataset   = "docs/examples/configs/mixed_dataset.toml"
+    led_dataset     = "docs/examples/configs/led_dataset.toml"
+    sea_dataset     = "docs/examples/configs/sea_dataset.toml"
+    electricity     = "docs/examples/configs/electricity_dataset.toml"
+
+    # Usage examples:
+    example_sine       = "dataset = drift_datasets.create_dataset('docs/examples/configs/sine_dataset.toml')"
+    example_hyperplane = "dataset = drift_datasets.create_dataset('docs/examples/configs/hyperplane_slow.toml')"
+    example_real_world = "dataset = drift_datasets.create_dataset('docs/examples/configs/electricity_dataset.toml')"
+
+# Basic generator configuration for reference
+[generator_config]
+    n_instances             = 1000
+    classification_function = 1
+    random_seed             = 42
+
+# Basic drift configuration for reference  
+[drift_config]
+    drift_points   = [500]
+    drift_types    = ["concept"]
+    drift_patterns = ["abrupt"]
