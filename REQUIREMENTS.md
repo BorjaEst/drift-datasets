@@ -139,6 +139,20 @@
 - Features with role="exclude" do not appear in X columns
 - n_classes matches unique values in y for classification tasks
 
+### REQ-011A: Pydantic v2 Model Validation
+
+**Description**: System shall use Pydantic v2 for all data model validation to ensure type safety and data integrity.
+**Acceptance Criteria**:
+
+- All data models (DriftDataset, DatasetMetadata, DriftMetadata, FeatureMetadata) inherit from pydantic.BaseModel
+- Use Pydantic v2 Field() with constraints for validation (min_length, max_length, ge, le, etc.)
+- Enable pydantic.ConfigDict with appropriate settings (str_strip_whitespace=True, validate_assignment=True)
+- Leverage Pydantic validators for complex business logic validation
+- Use Annotated types with Field constraints for self-documenting schemas
+- Delegate all data validation to Pydantic rather than manual validation code
+- Ensure Pydantic models provide clear error messages for validation failures
+- Support model serialization/deserialization for configuration persistence
+
 ## External Integration Requirements
 
 ### REQ-012: CapyMOA Integration

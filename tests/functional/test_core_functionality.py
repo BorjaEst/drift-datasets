@@ -269,7 +269,7 @@ class TestDatasetPersistence:
         # Arrange: Save dataset first
         original_dataset = DriftDataset(**sample_drift_dataset)
         output_dir = tmp_path / "saved_datasets"
-        saved_paths = original_dataset.save(output_dir, formats=["parquet"])
+        saved_paths = original_dataset.save(output_dir, formats=["parquet", "json"])
 
         # Act: Load dataset from disk
         loaded_dataset = DriftDataset.load(saved_paths[0])
@@ -290,14 +290,14 @@ class TestDatasetPersistence:
         output_dir = tmp_path / "saved_datasets"
 
         # Act: Save and load dataset
-        saved_paths = dataset.save(output_dir, formats=["parquet"])
+        saved_paths = dataset.save(output_dir, formats=["parquet", "json"])
         loaded_dataset = DriftDataset.load(saved_paths[0])
 
         # Assert: All metadata preserved
-        assert loaded_dataset.drift_metadata["drift_points"] == [500], "Drift points preserved"
-        assert loaded_dataset.drift_metadata["drift_types"] == ["concept"], "Drift types preserved"
-        assert loaded_dataset.dataset_metadata["dimension"] == "multivariate", "Dataset dimension preserved"
-        assert loaded_dataset.dataset_metadata["n_classes"] == 2, "Number of classes preserved"
+        assert loaded_dataset.drift_metadata.drift_points == [500], "Drift points preserved"
+        assert loaded_dataset.drift_metadata.drift_types == ["concept"], "Drift types preserved"
+        assert loaded_dataset.dataset_metadata.get("dimension") == "multivariate", "Dataset dimension preserved"
+        assert loaded_dataset.dataset_metadata.n_classes == 2, "Number of classes preserved"
 
 
 class TestDatasetValidation:
@@ -336,19 +336,145 @@ class TestDatasetValidation:
 
     def test_should_validate_drift_metadata_consistency_when_validating_dataset(self, sample_drift_dataset):
         """Test REQ-005: Validate drift metadata consistency with dataset size."""
+        from pydantic import ValidationError
+
         from drift_datasets.models import DriftDataset
 
-        # Arrange: Create dataset with invalid drift points
+        # Arrange: Valid dataset should pass validation
+        dataset = DriftDataset(**sample_drift_dataset)
+        is_valid, errors = dataset.validate()
+
+        # Assert: Valid dataset passes both Pydantic and custom validation
+        assert is_valid == True, "Validation should pass for valid dataset"
+        assert len(errors) == 0, "No errors should be reported for valid dataset"
+
+        # Arrange: Test that Pydantic prevents creation of invalid datasets
         invalid_drift_data = sample_drift_dataset.copy()
         invalid_drift_data["drift_metadata"]["drift_points"] = [2000]  # Beyond dataset size
 
-        # Act: Validate dataset with invalid drift points
-        dataset = DriftDataset(**invalid_drift_data)
-        is_valid, errors = dataset.validate()
+        # Act & Assert: Pydantic should prevent creation of invalid dataset
+        with pytest.raises(ValidationError) as exc_info:
+            DriftDataset(**invalid_drift_data)
 
-        # Assert: Validation detects invalid drift points
-        assert is_valid == False, "Validation should fail for drift points beyond dataset size"
-        assert any("drift point" in error.lower() for error in errors), "Should detect invalid drift points"
+        error_msg = str(exc_info.value)
+        assert "not a valid index" in error_msg, "Should prevent creation with invalid drift points"
+
+
+class TestPydanticModelValidation:
+    """Test Pydantic v2 model validation functionality (REQ-011A)."""
+
+    def test_should_validate_using_pydantic_when_dataset_created(self, sample_drift_dataset):
+        """Test REQ-011A: DriftDataset uses Pydantic v2 BaseModel for validation."""
+        from pydantic import BaseModel
+
+        from drift_datasets.models import DriftDataset
+
+        # Assert: DriftDataset inherits from Pydantic BaseModel
+        assert issubclass(DriftDataset, BaseModel), "DriftDataset must inherit from pydantic.BaseModel"
+
+        # Act: Create dataset - should succeed with valid data
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Assert: Dataset created successfully with Pydantic validation
+        assert isinstance(dataset, BaseModel), "Dataset instance is a Pydantic BaseModel"
+        assert hasattr(dataset, "model_config"), "Dataset has Pydantic model_config"
+
+    def test_should_enforce_field_constraints_when_invalid_data_provided(self):
+        """Test REQ-011A: Pydantic Field constraints are enforced for data integrity."""
+        import pandas as pd
+        from pydantic import ValidationError
+
+        from drift_datasets.models import DriftDataset
+
+        # Test name field constraints
+        with pytest.raises(ValidationError) as exc_info:
+            DriftDataset(
+                X=pd.DataFrame({"feature": [1, 2, 3]}),
+                y=pd.Series([0, 1, 0]),
+                name="",  # Empty name should fail min_length constraint
+                source_type="synthetic",
+                drift_metadata={},
+                dataset_metadata={},
+            )
+
+        errors = str(exc_info.value)
+        assert "String should have at least 1 character" in errors, "Should enforce min_length constraint"
+
+        # Test source_type pattern constraint
+        with pytest.raises(ValidationError) as exc_info:
+            DriftDataset(
+                X=pd.DataFrame({"feature": [1, 2, 3]}),
+                y=pd.Series([0, 1, 0]),
+                name="test",
+                source_type="invalid_type",  # Invalid source type should fail pattern constraint
+                drift_metadata={},
+                dataset_metadata={},
+            )
+
+        errors = str(exc_info.value)
+        assert "String should match pattern" in errors, "Should enforce pattern constraint"
+
+    def test_should_validate_data_consistency_when_inconsistent_data_provided(self):
+        """Test REQ-011A: Pydantic model validators enforce data consistency rules."""
+        import pandas as pd
+        from pydantic import ValidationError
+
+        from drift_datasets.models import DriftDataset
+
+        # Test X and y length mismatch
+        with pytest.raises(ValidationError) as exc_info:
+            DriftDataset(
+                X=pd.DataFrame({"feature": [1, 2, 3]}),  # 3 samples
+                y=pd.Series([0, 1]),  # 2 samples - length mismatch
+                name="test",
+                source_type="synthetic",
+                drift_metadata={},
+                dataset_metadata={},
+            )
+
+        errors = str(exc_info.value)
+        assert "different lengths" in errors, "Should detect X/y length mismatch"
+
+        # Test invalid drift points
+        with pytest.raises(ValidationError) as exc_info:
+            DriftDataset(
+                X=pd.DataFrame({"feature": [1, 2, 3]}),
+                y=pd.Series([0, 1, 0]),
+                name="test",
+                source_type="synthetic",
+                drift_metadata={"drift_points": [5]},  # Point beyond dataset size
+                dataset_metadata={},
+            )
+
+        errors = str(exc_info.value)
+        assert "not a valid index" in errors, "Should detect invalid drift points"
+
+    def test_should_use_pydantic_config_settings_when_validating(self):
+        """Test REQ-011A: Pydantic ConfigDict settings are properly configured."""
+        import pandas as pd
+
+        from drift_datasets.models import DriftDataset
+
+        # Test str_strip_whitespace setting
+        dataset = DriftDataset(
+            X=pd.DataFrame({"feature": [1, 2, 3]}),
+            y=pd.Series([0, 1, 0]),
+            name="  test_dataset  ",  # Name with whitespace
+            source_type=" synthetic ",  # Source type with whitespace
+            drift_metadata={},
+            dataset_metadata={},
+        )
+
+        # Assert: Whitespace should be stripped
+        assert dataset.name == "test_dataset", "Whitespace should be stripped from name"
+        assert dataset.source_type == "synthetic", "Whitespace should be stripped from source_type"
+
+        # Test validate_assignment setting by modifying after creation
+        try:
+            dataset.source_type = "invalid_type"
+            assert False, "Should have raised ValidationError due to validate_assignment=True"
+        except Exception as e:
+            assert "String should match pattern" in str(e), "Should validate on assignment"
 
 
 class TestDatasetInformation:
