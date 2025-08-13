@@ -79,6 +79,7 @@ The following diagram illustrates how TOML configuration files are transformed i
   - NumPy ≥2.2.0, pandas ≥2.3.0, SciPy ≥1.15.0 (data manipulation)
   - pydantic ≥2.0.0 (data validation and models)
   - toml ≥0.10.0 (configuration parsing)
+  - rich, rich-click (enhanced console output and CLI)
 - **System Requirements**:
   - Java Runtime Environment (required for CapyMOA synthetic generation)
   - Internet connection (for UCI dataset downloads)
