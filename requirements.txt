@@ -1,4 +1,6 @@
 # Core dependencies for drift-datasets
+capymoa~=0.10.0
+ucimlrepo~=0.0.7
 numpy~=2.2.0
 pandas~=2.3.0
 scipy~=1.15.0
