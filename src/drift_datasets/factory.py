@@ -93,6 +93,13 @@ def _create_synthetic_dataset(name: str, config: Dict[str, Any]) -> DriftDataset
         "drift_intensities": drift_config.get("drift_intensities", [1.0] * len(drift_points)),
     }
 
+    # Add research parameters only if explicitly provided
+    if "transition_durations" in drift_config:
+        drift_metadata["transition_durations"] = drift_config["transition_durations"]
+
+    if "affected_features" in drift_config:
+        drift_metadata["affected_features"] = drift_config["affected_features"]
+
     # Build dataset metadata
     dataset_metadata = {
         "generator": {"name": generator_name, **generator_config},

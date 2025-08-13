@@ -7,11 +7,11 @@ with comprehensive drift metadata and ground truth information.
 
 import json
 from pathlib import Path
-from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, Field, model_validator, validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class FeatureMetadata(BaseModel):
@@ -42,11 +42,11 @@ class DatasetMetadata(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="allow")
 
-    name: Annotated[str, Field(min_length=1, description="Dataset name")]
-    source_type: Annotated[str, Field(pattern=r"^(synthetic|real_world|mixed|unknown)$", description="Origin of the dataset")]
-    n_samples: Annotated[int, Field(ge=1, description="Number of samples")]
-    n_features: Annotated[int, Field(ge=1, description="Number of features")]
-    n_classes: Annotated[int, Field(ge=2, description="Number of classes")]
+    name: str = Field(min_length=1, description="Dataset name")
+    source_type: str = Field(pattern=r"^(synthetic|real_world|mixed|unknown)$", description="Origin of the dataset")
+    n_samples: int = Field(ge=1, description="Number of samples")
+    n_features: int = Field(ge=1, description="Number of features")
+    n_classes: Optional[int] = Field(default=None, ge=2, description="Number of classes (None for regression)")
     dimension: Optional[str] = Field(default=None, description="Dataset dimensionality")
     labeling: Optional[str] = Field(default=None, description="Labeling type")
     features: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="Feature definitions")
@@ -80,7 +80,7 @@ class DriftMetadata(BaseModel):
 
     @model_validator(mode="after")
     def validate_drift_consistency(self) -> "DriftMetadata":
-        """Ensure all drift lists have consistent lengths."""
+        """Ensure all drift lists have consistent lengths and valid values."""
         n_points = len(self.drift_points)
 
         if self.drift_types and len(self.drift_types) != n_points:
@@ -91,6 +91,11 @@ class DriftMetadata(BaseModel):
 
         if self.drift_intensities and len(self.drift_intensities) != n_points:
             raise ValueError(f"drift_intensities length ({len(self.drift_intensities)}) must match drift_points length ({n_points})")
+
+        # Validate drift_intensities range
+        for i, intensity in enumerate(self.drift_intensities):
+            if not (0.0 <= intensity <= 1.0):
+                raise ValueError(f"drift_intensities[{i}] = {intensity} must be in range [0.0, 1.0]")
 
         if self.affected_features and len(self.affected_features) != n_points:
             raise ValueError(f"affected_features length ({len(self.affected_features)}) must match drift_points length ({n_points})")
@@ -129,8 +134,8 @@ class DriftDataset(BaseModel):
 
     X: pd.DataFrame = Field(..., description="Feature matrix as pandas DataFrame")
     y: pd.Series = Field(..., description="Target vector as pandas Series")
-    name: Annotated[str, Field(min_length=1, max_length=100, description="Dataset name")]
-    source_type: Annotated[str, Field(pattern=r"^(synthetic|real_world|mixed|unknown)$", description="Type of dataset")]
+    name: str = Field(min_length=1, max_length=100, description="Dataset name")
+    source_type: str = Field(pattern=r"^(synthetic|real_world|mixed|unknown)$", description="Type of dataset")
     drift_metadata: Union[DriftMetadata, Dict[str, Any]] = Field(
         default_factory=dict, description="Metadata about drift patterns and ground truth"
     )

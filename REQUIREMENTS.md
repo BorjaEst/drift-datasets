@@ -65,13 +65,15 @@
 
 ### REQ-006: Drift Point Specification
 
-**Description**: System shall create precise drift point metadata with ground truth information.
+**Description**: System shall create precise drift point metadata with ground truth information populated from research parameters.
 **Acceptance Criteria**:
 
 - drift_points list contains valid sample indices within [0, len(X))
 - drift_types list matches drift_points length with values ["covariate", "concept", "prior", "none"]
 - drift_patterns list matches drift_points length with values ["abrupt", "gradual", "recurring", "incremental"]
-- Optional drift_widths (CapyMOA width parameter) and drift_alphas (CapyMOA alpha parameter)
+- DriftMetadata preserves original research parameters: transition_durations, drift_intensities
+- Factory passes all drift_config parameters to DriftMetadata constructor
+- Optional drift_widths and drift_alphas (CapyMOA parameters) supported for backward compatibility
 - Optional affected_features specifies feature indices impacted by each drift
 - Optional concepts list provides human-readable concept labels
 
@@ -141,15 +143,19 @@
 
 ### REQ-011A: Pydantic v2 Model Validation
 
-**Description**: System shall use Pydantic v2 for all data model validation to ensure type safety and data integrity.
+**Description**: System shall use Pydantic v2 for all data model validation with research parameter support to ensure type safety and data integrity.
 **Acceptance Criteria**:
 
 - All data models (DriftDataset, DatasetMetadata, DriftMetadata, FeatureMetadata) inherit from pydantic.BaseModel
+- DriftMetadata model accepts and validates research parameters as optional fields
+- Support transition_durations: Optional[List[int]] with length validation
+- Support drift_intensities: Optional[List[float]] with range validation [0.0, 1.0]
 - Use Pydantic v2 Field() with constraints for validation (min_length, max_length, ge, le, etc.)
 - Enable pydantic.ConfigDict with appropriate settings (str_strip_whitespace=True, validate_assignment=True)
 - Leverage Pydantic validators for complex business logic validation
-- Use Annotated types with Field constraints for self-documenting schemas
+- Use types with Field constraints for self-documenting schemas
 - Delegate all data validation to Pydantic rather than manual validation code
+- Research parameter validation provides clear field-level error messages
 - Ensure Pydantic models provide clear error messages for validation failures
 - Support model serialization/deserialization for configuration persistence
 
@@ -157,15 +163,48 @@
 
 ### REQ-012: CapyMOA Integration
 
-**Description**: System shall integrate with CapyMOA for synthetic dataset generation with native drift support.
+**Description**: System shall integrate with CapyMOA for synthetic dataset generation with automatic research parameter translation.
 **Acceptance Criteria**:
 
+- Generators automatically translate research parameters to CapyMOA parameters
+- Support research parameter mapping: transition_durations → drift_widths, drift_intensities → drift_alphas
+- Generators validate both research and CapyMOA parameter formats
+- Research parameters take precedence when both formats provided
+- Translation errors provide clear field-level error messages
 - Initialize CapyMOA generators with configuration parameters
 - Handle CapyMOA-specific parameters (width, alpha) for drift injection
 - Generate datasets with controlled concept drift at specified points
 - Map CapyMOA generator outputs to pandas DataFrame/Series format
 - Handle CapyMOA failures gracefully with meaningful error messages
 - Require Java runtime availability for CapyMOA operations
+
+### REQ-012A: Generator Parameter Translation
+
+**Description**: Generators shall translate research-friendly parameters to implementation-specific parameters during dataset creation.
+**Acceptance Criteria**:
+
+- Each generator implements _translate_research_parameters(drift_config: dict) → dict method
+- Support parameter mappings specific to each generator type:
+  - transition_durations → drift_widths (all generators)
+  - drift_intensities → drift_alphas (all generators)
+  - concept_reversal → generator-specific concept management
+- Validate research parameter consistency (list lengths match drift_points)
+- Preserve original research parameters in returned DriftMetadata
+- Log parameter translation at DEBUG level for troubleshooting
+- Translation completes in <50ms for typical configurations
+
+### REQ-012B: Generator Parameter Validation Enhancement
+
+**Description**: Generators shall validate both research and implementation parameters with comprehensive error reporting.
+**Acceptance Criteria**:
+
+- Extend existing _validate_parameters() to accept research parameters
+- Add research parameter validation to GENERATOR_PARAMETERS mappings
+- Support optional research parameters with sensible defaults
+- Validate parameter value ranges (e.g., drift_intensities in [0.0, 1.0])
+- Validate list lengths match drift_points length
+- Raise specific ValueError with parameter name and expected format
+- Maintain backward compatibility with existing CapyMOA parameter configurations
 
 ### REQ-013: UCI Repository Integration
 

@@ -266,14 +266,18 @@ class CapyMOAInterface:
 
     def get_generator_parameters(self, generator_name: str) -> List[str]:
         """Get list of available parameters for a generator."""
-        if generator_name == "SineGenerator":
-            return ["n_instances", "random_seed", "noise_level", "classification_function"]
-        elif generator_name == "HyperplaneGenerator":
-            return ["n_instances", "random_seed", "n_features"]
-        elif generator_name == "STAGGERGenerator":
-            return ["n_instances", "random_seed"]
-        elif generator_name == "SEAGenerator":
-            return ["n_instances", "random_seed", "threshold"]
+        base_params = {
+            "SineGenerator": ["n_instances", "random_seed", "noise_level", "classification_function"],
+            "HyperplaneGenerator": ["n_instances", "random_seed", "n_features"],
+            "STAGGERGenerator": ["n_instances", "random_seed"],
+            "SEAGenerator": ["n_instances", "random_seed", "threshold"],
+        }
+
+        # Add research parameters to all generators
+        research_params = ["drift_points", "transition_durations", "drift_intensities", "affected_features"]
+
+        if generator_name in base_params:
+            return base_params[generator_name] + research_params
         else:
             return []
 
@@ -289,3 +293,47 @@ class CapyMOAInterface:
         for param_name in parameters.keys():
             if param_name not in available_params:
                 raise ValueError(f"Invalid parameter '{param_name}' for generator {generator_name}")
+
+        # Validate research parameters if present
+        self._validate_research_parameters(generator_name, parameters)
+
+    def _translate_research_parameters(self, generator_name: str, drift_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Translate research parameters to CapyMOA parameters."""
+        translated = drift_config.copy()
+
+        # transition_durations → drift_widths
+        if "transition_durations" in drift_config:
+            translated["drift_widths"] = drift_config["transition_durations"]
+
+        # drift_intensities → drift_alphas
+        if "drift_intensities" in drift_config:
+            translated["drift_alphas"] = drift_config["drift_intensities"]
+
+        # Research parameters take precedence over CapyMOA parameters
+        if "transition_durations" in drift_config and "drift_widths" in drift_config:
+            translated["drift_widths"] = drift_config["transition_durations"]
+
+        if "drift_intensities" in drift_config and "drift_alphas" in drift_config:
+            translated["drift_alphas"] = drift_config["drift_intensities"]
+
+        return translated
+
+    def _validate_research_parameters(self, generator_name: str, parameters: Dict[str, Any]):
+        """Validate research parameter consistency."""
+        drift_points = parameters.get("drift_points", [])
+        transition_durations = parameters.get("transition_durations", [])
+        drift_intensities = parameters.get("drift_intensities", [])
+
+        # Validate length consistency
+        if transition_durations and len(transition_durations) != len(drift_points):
+            raise ValueError(
+                f"transition_durations length ({len(transition_durations)}) must match drift_points length ({len(drift_points)})"
+            )
+
+        if drift_intensities and len(drift_intensities) != len(drift_points):
+            raise ValueError(f"drift_intensities length ({len(drift_intensities)}) must match drift_points length ({len(drift_points)})")
+
+        # Validate drift_intensities range
+        for i, intensity in enumerate(drift_intensities):
+            if not (0.0 <= intensity <= 1.0):
+                raise ValueError(f"drift_intensities[{i}] = {intensity} must be in range [0.0, 1.0]")
