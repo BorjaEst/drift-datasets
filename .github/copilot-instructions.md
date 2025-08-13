@@ -72,7 +72,7 @@ Don't build "DataModel" - build "User", "Product", "Order", "Invoice", etc.
 
 ```python
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Literal, Annotated
+from typing import Literal
 from rich.console import Console
 
 console = Console()
@@ -86,7 +86,7 @@ class User(BaseModel):  # Or Product, Order, Invoice, etc.
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     # Replace these fields with YOUR domain fields
-    username: Annotated[str, Field(min_length=1, max_length=50)]
+    username: str == Field(min_length=1, max_length=50)
     email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
     status: Literal["active", "inactive", "pending"] = "pending"
     # Add YOUR domain-specific fields here
