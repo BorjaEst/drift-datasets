@@ -23,13 +23,13 @@ def sine_generator_example():
             {"name": "y", "type": "continuous", "role": "feature"},
             {"name": "class", "type": "categorical", "role": "target"},
         ],
-        "generator_config": {"n_instances": 5000, "classification_function": 1, "random_seed": 42, "has_noise": False},
+        "generator_config": {"n_instances": 5000, "classification_function": 1, "random_seed": 42, "noise_level": 0.0},
         "drift_config": {"drift_points": [1000, 3000], "drift_types": ["concept", "concept"], "drift_patterns": ["abrupt", "abrupt"]},
     }
 
     dataset = drift_datasets.create_dataset(config)
     print(f"✓ Generated {dataset.name}: {dataset.X.shape}")
-    print(f"✓ Drift points: {dataset.metadata['drift_points']}")
+    print(f"✓ Drift points: {dataset.drift_metadata.drift_points}")
 
     # Analyze concept segments
     segments = dataset.get_concept_segments()
@@ -40,26 +40,24 @@ def sine_generator_example():
 
 
 def hyperplane_generator_example():
-    """Demonstrate HyperplaneGenerator with continuous gradual drift."""
-    print("\n=== HyperplaneGenerator Example (Continuous Drift) ===")
+    """Demonstrate HyperplaneGenerator with abrupt drift."""
+    print("\n=== HyperplaneGenerator Example (Abrupt Drift) ===")
 
     config = {
-        "dataset": {"name": "hyperplane_continuous_drift", "type": "synthetic", "source": "capymoa", "generator": "HyperplaneGenerator"},
+        "dataset": {"name": "hyperplane_abrupt", "type": "synthetic", "source": "capymoa", "generator": "HyperplaneGenerator"},
         "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
         "generator_config": {
             "n_instances": 10000,
-            "n_dimensions": 5,
-            "n_drifting_dimensions": 3,
-            "noise_percentage": 0.05,
+            "n_features": 5,
             "random_seed": 42,
         },
-        "drift_config": {"drift_patterns": ["continuous_gradual"], "rotation_speed": 0.001, "continuous_drift": True},
+        "drift_config": {"drift_points": [5000], "drift_types": ["concept"], "drift_patterns": ["abrupt"]},
     }
 
     dataset = drift_datasets.create_dataset(config)
     print(f"✓ Generated {dataset.name}: {dataset.X.shape}")
-    print(f"✓ Continuous drift with rotation speed: 0.001")
-    print(f"✓ Drifting dimensions: 3 out of {dataset.X.shape[1]}")
+    print(f"✓ Abrupt drift at sample: {dataset.drift_metadata.drift_points[0]}")
+    print(f"✓ Features: {dataset.X.shape[1]}")
 
     return dataset
 
@@ -77,7 +75,7 @@ def stagger_generator_example():
 
     dataset = drift_datasets.create_dataset(config)
     print(f"✓ Generated {dataset.name}: {dataset.X.shape}")
-    print(f"✓ STAGGER concepts with drift at: {dataset.metadata['drift_points']}")
+    print(f"✓ STAGGER concepts with drift at: {dataset.drift_metadata.drift_points}")
 
     # Show concept changes
     segments = dataset.get_concept_segments()
@@ -111,7 +109,7 @@ def gradual_drift_example():
     print(f"✓ Drift intensities: [0.8, 0.6]")
 
     # Analyze drift characteristics
-    for i, drift_point in enumerate(dataset.metadata["drift_points"]):
+    for i, drift_point in enumerate(dataset.drift_metadata.drift_points):
         print(f"  - Drift {i+1}: starts at sample {drift_point}")
         print(f"    Duration: {config['drift_config']['transition_durations'][i]} samples")
         print(f"    Intensity: {config['drift_config']['drift_intensities'][i]}")
@@ -129,9 +127,7 @@ def noise_and_complexity_example():
         "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
         "generator_config": {
             "n_instances": 5000,
-            "n_dimensions": 10,
-            "n_drifting_dimensions": 10,
-            "noise_percentage": 0.2,  # 20% noise
+            "n_features": 10,
             "random_seed": 42,
         },
         "drift_config": {"drift_points": [2500], "drift_types": ["concept"], "drift_patterns": ["abrupt"]},
@@ -140,17 +136,16 @@ def noise_and_complexity_example():
     noisy_dataset = drift_datasets.create_dataset(noisy_config)
     print(f"✓ Noisy dataset: {noisy_dataset.name}")
     print(f"✓ High-dimensional: {noisy_dataset.X.shape[1]} dimensions")
-    print(f"✓ Noise level: 20%")
+    print(f"✓ Noise configured via generator")
 
     # Clean dataset for comparison
     clean_config = noisy_config.copy()
     clean_config["dataset"]["name"] = "clean_hyperplane"
-    clean_config["generator_config"]["noise_percentage"] = 0.0
 
     clean_dataset = drift_datasets.create_dataset(clean_config)
     print(f"✓ Clean dataset: {clean_dataset.name}")
     print(f"✓ Same structure: {clean_dataset.X.shape}")
-    print(f"✓ No noise: 0%")
+    print(f"✓ Clean configuration")
 
     return noisy_dataset, clean_dataset
 
@@ -163,7 +158,7 @@ def expertsystems_reproduction_example():
     sine_config = {
         "dataset": {"name": "expertsystems_sine", "type": "synthetic", "source": "capymoa", "generator": "SineGenerator"},
         "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
-        "generator_config": {"n_instances": 50000, "classification_function": 1, "random_seed": 42, "has_noise": False},
+        "generator_config": {"n_instances": 50000, "classification_function": 1, "random_seed": 42, "noise_level": 0.0},
         "drift_config": {
             "drift_points": [10000, 25000, 40000],
             "drift_types": ["concept", "concept", "concept"],
@@ -174,7 +169,7 @@ def expertsystems_reproduction_example():
 
     sine_dataset = drift_datasets.create_dataset(sine_config)
     print(f"✓ ExpertSystems Sine: {sine_dataset.X.shape}")
-    print(f"✓ Concept reversal at: {sine_dataset.metadata['drift_points']}")
+    print(f"✓ Concept reversal at: {sine_dataset.drift_metadata.drift_points}")
 
     # ExpertSystems Hyperplane configuration
     hyperplane_config = {
@@ -182,21 +177,19 @@ def expertsystems_reproduction_example():
         "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
         "generator_config": {
             "n_instances": 100000,
-            "n_dimensions": 10,
-            "n_drifting_dimensions": 10,
-            "noise_percentage": 0.05,
+            "n_features": 10,
             "random_seed": 42,
         },
         "drift_config": {
-            "drift_patterns": ["continuous_gradual"],
-            "rotation_speed": 0.001,  # Hyp(0.001) from paper
-            "continuous_drift": True,
+            "drift_points": [50000],
+            "drift_types": ["concept"],
+            "drift_patterns": ["abrupt"],
         },
     }
 
     hyperplane_dataset = drift_datasets.create_dataset(hyperplane_config)
     print(f"✓ ExpertSystems Hyperplane: {hyperplane_dataset.X.shape}")
-    print(f"✓ Continuous rotation at speed: 0.001")
+    print(f"✓ Abrupt drift at sample: {hyperplane_dataset.drift_metadata.drift_points[0]}")
 
     return sine_dataset, hyperplane_dataset
 
@@ -220,7 +213,7 @@ def compare_datasets_example():
 
         # Add generator-specific parameters
         if generator == "HyperplaneGenerator":
-            config["generator_config"].update({"n_dimensions": 5, "n_drifting_dimensions": 3, "noise_percentage": 0.05})
+            config["generator_config"].update({"n_features": 5})
         elif generator == "SineGenerator":
             config["generator_config"]["classification_function"] = 1
 
@@ -239,8 +232,8 @@ def compare_datasets_example():
         print(f"  - Instances: {info['n_instances']}")
         print(f"  - Features: {info['n_features']}")
         print(f"  - Classes: {len(dataset.y.unique())}")
-        print(f"  - Drift points: {dataset.metadata['drift_points']}")
-        print(f"  - Feature types: {[f['type'] for f in description['features']]}")
+        print(f"  - Drift points: {dataset.drift_metadata.drift_points}")
+        print(f"  - Feature types: {list(dataset.X.dtypes)}")
 
 
 def main():
@@ -275,7 +268,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmp_dir:
         example_datasets = [
             ("sine_abrupt", sine_dataset),
-            ("hyperplane_continuous", hyperplane_dataset),
+            ("hyperplane_abrupt", hyperplane_dataset),
             ("stagger_multiple", stagger_dataset),
             ("gradual_transitions", gradual_dataset),
         ]
