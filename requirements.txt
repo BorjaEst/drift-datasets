@@ -9,3 +9,4 @@ pyarrow>=10.0,<18.0
 rich ~= 13.9.4
 rich-argparse ~= 1.7.0
 toml~=0.10.0
+matplotlib ~= 3.8.0

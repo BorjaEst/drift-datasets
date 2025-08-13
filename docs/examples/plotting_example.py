@@ -5,7 +5,6 @@ This example demonstrates how to visualize DriftDataset objects with
 different plot types and options to understand data and drift patterns.
 """
 
-import tempfile
 from pathlib import Path
 
 import drift_datasets
@@ -40,53 +39,53 @@ def main():
     # Step 2: Create different types of plots
     print("\nStep 2: Creating different plot types...")
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        output_dir = Path(tmp_dir)
+    # Save plots in the current directory
+    output_dir = Path(".")
 
-        # 2a: Basic scatter plot with drift points
-        print("  • Creating 2D scatter plot...")
-        fig1 = drift_datasets.plot_dataset(
-            dataset,
-            plot_type="scatter",
-            show_drift_points=True,
-            color_by_target=True,
-            save_path=output_dir / "scatter_plot.png",
-        )
-        print(f"    ✓ Saved scatter plot: scatter_plot.png")
+    # 2a: Basic scatter plot with drift points
+    print("  • Creating 2D scatter plot...")
+    fig1 = drift_datasets.plot_dataset(
+        dataset,
+        plot_type="scatter",
+        show_drift_points=True,
+        color_by_target=True,
+        save_path=output_dir / "scatter_plot.png",
+    )
+    print(f"    ✓ Saved scatter plot: scatter_plot.png")
 
-        # 2b: Time series plot showing features over time
-        print("  • Creating time series plot...")
-        fig2 = drift_datasets.plot_dataset(
-            dataset,
-            plot_type="time_series",
-            show_drift_points=True,
-            show_concept_segments=True,
-            save_path=output_dir / "time_series_plot.png",
-        )
-        print(f"    ✓ Saved time series plot: time_series_plot.png")
+    # 2b: Time series plot showing features over time
+    print("  • Creating time series plot...")
+    fig2 = drift_datasets.plot_dataset(
+        dataset,
+        plot_type="time_series",
+        show_drift_points=True,
+        show_concept_segments=True,
+        save_path=output_dir / "time_series_plot.png",
+    )
+    print(f"    ✓ Saved time series plot: time_series_plot.png")
 
-        # 2c: Auto-selected plot type
-        print("  • Creating auto-selected plot...")
-        fig3 = drift_datasets.plot_dataset(
-            dataset,
-            plot_type="auto",  # Let the function choose the best plot type
-            show_drift_points=True,
-            save_path=output_dir / "auto_plot.png",
-        )
-        print(f"    ✓ Saved auto plot: auto_plot.png")
+    # 2c: Auto-selected plot type
+    print("  • Creating auto-selected plot...")
+    fig3 = drift_datasets.plot_dataset(
+        dataset,
+        plot_type="auto",  # Let the function choose the best plot type
+        show_drift_points=True,
+        save_path=output_dir / "auto_plot.png",
+    )
+    print(f"    ✓ Saved auto plot: auto_plot.png")
 
-        # 2d: Plot specific features only
-        print("  • Creating plot with selected features...")
-        fig4 = drift_datasets.plot_dataset(
-            dataset,
-            features=["feature_0"],  # Plot only first feature
-            plot_type="time_series",
-            show_drift_points=True,
-            save_path=output_dir / "single_feature_plot.png",
-        )
-        print(f"    ✓ Saved single feature plot: single_feature_plot.png")
+    # 2d: Plot specific features only
+    print("  • Creating plot with selected features...")
+    fig4 = drift_datasets.plot_dataset(
+        dataset,
+        features=["feature_0"],  # Plot only first feature
+        plot_type="time_series",
+        show_drift_points=True,
+        save_path=output_dir / "single_feature_plot.png",
+    )
+    print(f"    ✓ Saved single feature plot: single_feature_plot.png")
 
-        print(f"\n✓ All plots saved to: {output_dir}")
+    print(f"\n✓ All plots saved to: {Path.cwd()}")
 
     # Step 3: Demonstrate with different dataset types
     print("\nStep 3: Plotting different dataset types...")
