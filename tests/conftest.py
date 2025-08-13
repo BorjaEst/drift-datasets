@@ -31,6 +31,7 @@ def capymoa_interface_mock():
             mock_generator = Mock()
             n_instances = generator_config.get("n_instances", 1000)
 
+            # Return tuple format (X, y) as expected by the factory
             mock_generator.generate.return_value = (
                 pd.DataFrame(
                     {
@@ -58,6 +59,15 @@ def capymoa_service():
     with patch("drift_datasets.generators.synthetic.CapyMOAService") as mock_service:
         # Configure mock to return deterministic synthetic data
         mock_instance = Mock()
+
+        # Configure service with generators attribute
+        mock_instance.generators = {
+            "SineGenerator": Mock(),
+            "HyperplaneGenerator": Mock(),
+            "STAGGERGenerator": Mock(),
+            "SEAGenerator": Mock(),
+        }
+
         mock_instance.generate_sine_dataset.return_value = {
             "X": np.random.RandomState(42).random((1000, 2)),
             "y": np.random.RandomState(42).randint(0, 2, 1000),
@@ -106,32 +116,31 @@ def uci_repository_service():
 @pytest.fixture(scope="session")
 def parameter_translator():
     """Mock parameter translator for research parameter conversion."""
-    with patch("drift_datasets.generators.parameter_translator.ParameterTranslator") as mock_translator:
-        mock_instance = Mock()
+    # Use a simpler mock that doesn't require the module to exist
+    mock_translator = Mock()
 
-        # Define translation rules
-        def translate_research_params(drift_config):
-            translations = {"transition_durations": "drift_widths", "drift_intensities": "drift_alphas"}
+    # Define translation rules
+    def translate_research_params(drift_config):
+        translations = {"transition_durations": "drift_widths", "drift_intensities": "drift_alphas"}
 
-            capymoa_params = {}
-            for research_param, capymoa_param in translations.items():
-                if research_param in drift_config:
-                    if research_param == "drift_intensities":
-                        # Convert research intensities to CapyMOA alphas
-                        intensities = drift_config[research_param]
-                        capymoa_params[capymoa_param] = (
-                            [1.0 if i == "complete" else 0.5 if i == "moderate" else 0.1 for i in intensities]
-                            if isinstance(intensities, list)
-                            else [float(intensities)]
-                        )
-                    else:
-                        capymoa_params[capymoa_param] = drift_config[research_param]
+        capymoa_params = {}
+        for research_param, capymoa_param in translations.items():
+            if research_param in drift_config:
+                if research_param == "drift_intensities":
+                    # Convert research intensities to CapyMOA alphas
+                    intensities = drift_config[research_param]
+                    capymoa_params[capymoa_param] = (
+                        [1.0 if i == "complete" else 0.5 if i == "moderate" else 0.1 for i in intensities]
+                        if isinstance(intensities, list)
+                        else [float(intensities)]
+                    )
+                else:
+                    capymoa_params[capymoa_param] = drift_config[research_param]
 
-            return capymoa_params
+        return capymoa_params
 
-        mock_instance.translate_research_params.side_effect = translate_research_params
-        mock_translator.return_value = mock_instance
-        yield mock_translator
+    mock_translator.translate_research_params.side_effect = translate_research_params
+    yield mock_translator
 
 
 @pytest.fixture
@@ -163,6 +172,44 @@ def sample_toml_configs(tmp_path):
             "drift_patterns": ["gradual", "abrupt"],
             "drift_simulation": "concept_shift",
         },
+    }
+
+    # Hyperplane dataset configuration
+    hyperplane_config = {
+        "dataset": {"name": "test_hyperplane", "type": "synthetic", "source": "capymoa", "generator": "HyperplaneGenerator"},
+        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+        "features": [{"name": f"feature_{i}", "type": "continuous", "role": "feature"} for i in range(10)]
+        + [{"name": "class", "type": "categorical", "role": "target"}],
+        "generator_config": {"n_instances": 1000, "n_features": 10, "random_seed": 42},
+        "drift_config": {"drift_points": [500], "drift_types": ["concept"], "drift_patterns": ["gradual"]},
+    }
+
+    # STAGGER dataset configuration
+    stagger_config = {
+        "dataset": {"name": "test_stagger", "type": "synthetic", "source": "capymoa", "generator": "STAGGERGenerator"},
+        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+        "features": [
+            {"name": "size", "type": "categorical", "role": "feature"},
+            {"name": "color", "type": "categorical", "role": "feature"},
+            {"name": "shape", "type": "categorical", "role": "feature"},
+            {"name": "class", "type": "categorical", "role": "target"},
+        ],
+        "generator_config": {"n_instances": 1000, "concept_index": 1, "random_seed": 42},
+        "drift_config": {"drift_points": [333, 666], "drift_types": ["concept", "concept"], "drift_patterns": ["abrupt", "abrupt"]},
+    }
+
+    # SEA dataset configuration
+    sea_config = {
+        "dataset": {"name": "test_sea", "type": "synthetic", "source": "capymoa", "generator": "SEAGenerator"},
+        "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+        "features": [
+            {"name": "x1", "type": "continuous", "role": "feature"},
+            {"name": "x2", "type": "continuous", "role": "feature"},
+            {"name": "x3", "type": "continuous", "role": "feature"},
+            {"name": "class", "type": "categorical", "role": "target"},
+        ],
+        "generator_config": {"n_instances": 1000, "threshold": 8, "noise_percentage": 0.1, "random_seed": 42},
+        "drift_config": {"drift_points": [500], "drift_types": ["concept"], "drift_patterns": ["abrupt"]},
     }
 
     # Mixed dataset configuration
@@ -201,13 +248,21 @@ def sample_toml_configs(tmp_path):
             "noise_percentage": 0.05,
             "random_seed": 42,
         },
-        "drift_config": {"drift_patterns": ["continuous_gradual"], "rotation_speed": 0.001, "continuous_drift": True},
+        "drift_config": {
+            "drift_points": [25000, 50000, 75000],
+            "drift_patterns": ["gradual", "gradual", "gradual"],
+            "drift_types": ["concept", "concept", "concept"],
+            "continuous_drift": True,
+        },
     }
 
     # Write TOML files
     config_files = {
         "sine": sine_config,
         "uci": uci_config,
+        "hyperplane": hyperplane_config,
+        "stagger": stagger_config,
+        "sea": sea_config,
         "mixed": mixed_config,
         "expertsystems_sine": expertsystems_sine_config,
         "expertsystems_hyperplane": expertsystems_hyperplane_config,
@@ -220,6 +275,16 @@ def sample_toml_configs(tmp_path):
         configs[name] = str(config_file)
 
     return configs
+
+
+@pytest.fixture
+def expertsystems_configs(sample_toml_configs):
+    """ExpertSystems paper configurations for testing."""
+    return {
+        "sine_expertsystems": sample_toml_configs["expertsystems_sine"],
+        "hyperplane_expertsystems": sample_toml_configs["expertsystems_hyperplane"],
+        "stagger_expertsystems": sample_toml_configs["expertsystems_sine"],  # Reuse for now
+    }
 
 
 @pytest.fixture
@@ -301,10 +366,17 @@ def validation_utilities():
             assert "type" in feature, "Feature must have type"
             assert "role" in feature, "Feature must have role"
 
+    def validate_drift_intensities(drift_metadata, expected_range):
+        """Validate drift intensities are within expected range."""
+        intensities = drift_metadata.get("drift_intensities", [])
+        for intensity in intensities:
+            assert expected_range[0] <= intensity <= expected_range[1], f"Drift intensity {intensity} outside range {expected_range}"
+
     return {
         "validate_dataset_structure": validate_dataset_structure,
         "validate_drift_metadata": validate_drift_metadata,
         "validate_feature_metadata": validate_feature_metadata,
+        "validate_drift_intensities": validate_drift_intensities,
     }
 
 
@@ -332,6 +404,18 @@ def error_scenarios():
                 "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
             },
             "invalid_drift_pattern": {"drift_config": {"drift_patterns": ["invalid_pattern"]}},
+        },
+        "synthetic_generation": {
+            "conflicting_parameters": {
+                "dataset": {"name": "test", "type": "synthetic", "generator": "SineGenerator"},
+                "generator_config": {"n_instances": 1000, "n_features": 5, "n_dimensions": 10},  # Conflicting
+                "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            },
+            "invalid_parameter_range": {
+                "dataset": {"name": "test", "type": "synthetic", "generator": "SineGenerator"},
+                "generator_config": {"n_instances": 1000, "noise_level": 1.5},  # > 1.0
+                "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            },
         },
         "network_errors": {
             "uci_connection_error": ConnectionError("Unable to connect to UCI repository"),

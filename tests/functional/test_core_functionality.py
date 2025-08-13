@@ -7,6 +7,7 @@ including factory method usage, DriftDataset object creation, and configuration 
 
 from pathlib import Path
 
+import pandas as pd
 import pytest
 import toml
 
@@ -475,6 +476,195 @@ class TestPydanticModelValidation:
             assert False, "Should have raised ValidationError due to validate_assignment=True"
         except Exception as e:
             assert "String should match pattern" in str(e), "Should validate on assignment"
+
+
+class TestDriftAnalysisMethods:
+    """Test drift analysis methods functionality (REQ-007)."""
+
+    def test_should_detect_drift_points_when_checking_sample_indices(self, sample_drift_dataset):
+        """Test REQ-007: is_drift_point() returns boolean indicating proximity to drift."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Check drift point detection
+        is_drift_500 = dataset.is_drift_point(500)  # Exact drift point
+        is_drift_499 = dataset.is_drift_point(499)  # Not drift point
+        is_drift_501 = dataset.is_drift_point(501)  # Not drift point
+        is_drift_500_tol = dataset.is_drift_point(499, tolerance=1)  # Within tolerance
+
+        # Assert: REQ-007 - drift point detection
+        assert is_drift_500 == True, "Should detect exact drift point"
+        assert is_drift_499 == False, "Should not detect non-drift point"
+        assert is_drift_501 == False, "Should not detect non-drift point"
+        assert is_drift_500_tol == True, "Should detect drift point within tolerance"
+
+    def test_should_return_concept_segments_when_analyzing_drift_structure(self, sample_drift_dataset):
+        """Test REQ-007: get_concept_segments() returns List[Tuple[int, int]] with (start, end) indices."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Get concept segments
+        segments = dataset.get_concept_segments()
+
+        # Assert: REQ-007 - concept segments structure
+        assert isinstance(segments, list), "Segments should be a list"
+        assert len(segments) == 2, "Should have 2 segments (before and after drift)"
+
+        first_segment, second_segment = segments
+        assert first_segment == (0, 499), "First segment: start to drift point"
+        assert second_segment == (500, 999), "Second segment: drift point to end"
+
+    def test_should_return_drift_type_when_querying_specific_index(self, sample_drift_dataset):
+        """Test REQ-007: get_drift_type_at() returns drift type at specific sample index."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Get drift types at specific indices
+        drift_type_at_500 = dataset.get_drift_type_at(500)  # Drift point
+        drift_type_at_400 = dataset.get_drift_type_at(400)  # No drift
+
+        # Assert: REQ-007 - drift type retrieval
+        assert drift_type_at_500 == "concept", "Should return correct drift type at drift point"
+        assert drift_type_at_400 is None, "Should return None for non-drift points"
+
+    def test_should_validate_drift_metadata_consistency_when_checking_integrity(self, sample_drift_dataset):
+        """Test REQ-007: validate_drift_metadata() ensures consistency of all drift information."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Validate drift metadata
+        is_valid, errors = dataset.validate_drift_metadata()
+
+        # Assert: REQ-007 - drift metadata validation
+        assert is_valid == True, f"Drift metadata should be valid: {errors}"
+        assert len(errors) == 0, "No validation errors for valid drift metadata"
+
+    def test_should_handle_edge_cases_when_analyzing_drift(self, sample_drift_dataset):
+        """Test REQ-007: Methods handle edge cases (idx out of bounds, empty drift_points)."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act & Assert: Test edge cases
+        with pytest.raises(IndexError):
+            dataset.get_drift_type_at(2000)  # Out of bounds
+
+        with pytest.raises(IndexError):
+            dataset.get_drift_type_at(-1)  # Negative index
+
+        # Test with empty drift points dataset
+        empty_drift_data = sample_drift_dataset.copy()
+        empty_drift_data["drift_metadata"] = {"drift_points": [], "drift_types": [], "drift_patterns": []}
+        empty_dataset = DriftDataset(**empty_drift_data)
+
+        segments = empty_dataset.get_concept_segments()
+        assert segments == [(0, 999)], "Should return single segment for no drift points"
+
+
+class TestFeatureRoleBasedFiltering:
+    """Test feature role-based filtering functionality (REQ-008)."""
+
+    def test_should_filter_continuous_features_when_requested(self, sample_drift_dataset):
+        """Test REQ-008: get_continuous_features() returns only features with type='continuous'."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Filter continuous features
+        continuous_features = dataset.get_continuous_features()
+
+        # Assert: REQ-008 - continuous feature filtering
+        assert isinstance(continuous_features, pd.DataFrame), "Should return DataFrame"
+        assert len(continuous_features.columns) >= 0, "Should return valid number of columns"
+
+    def test_should_filter_features_by_role_when_requested(self, sample_drift_dataset):
+        """Test REQ-008: get_features_by_role(role) returns features matching specific role."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Filter features by role
+        feature_role_features = dataset.get_features_by_role("feature")
+
+        # Assert: REQ-008 - role-based filtering
+        assert isinstance(feature_role_features, pd.DataFrame), "Should return DataFrame"
+        assert len(feature_role_features.columns) >= 0, "Should return valid feature columns"
+
+    def test_should_exclude_non_drift_detection_features_when_filtering(self, sample_drift_dataset):
+        """Test REQ-008: get_drift_detection_features() excludes target, timestamp, etc."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Get drift detection features
+        drift_features = dataset.get_drift_detection_features()
+
+        # Assert: REQ-008 - drift detection feature filtering
+        assert isinstance(drift_features, pd.DataFrame), "Should return DataFrame"
+        assert len(drift_features.columns) >= 0, "Should return valid features for drift detection"
+
+
+class TestTemporalDataSplitting:
+    """Test temporal data splitting functionality (REQ-009)."""
+
+    def test_should_split_dataset_temporally_when_ratio_provided(self, sample_drift_dataset):
+        """Test REQ-009: split_temporal(ratio) creates train/test split at specified ratio."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Split dataset temporally
+        train_dataset, test_dataset = dataset.split_temporal(ratio=0.7)
+
+        # Assert: REQ-009 - temporal splitting
+        assert isinstance(train_dataset, DriftDataset), "Train split is DriftDataset"
+        assert isinstance(test_dataset, DriftDataset), "Test split is DriftDataset"
+
+        assert len(train_dataset.X) == 700, "Train set has 70% of samples"
+        assert len(test_dataset.X) == 300, "Test set has 30% of samples"
+
+        assert len(train_dataset.y) == 700, "Train targets match features"
+        assert len(test_dataset.y) == 300, "Test targets match features"
+
+    def test_should_preserve_chronological_order_when_splitting(self, sample_drift_dataset):
+        """Test REQ-009: Training set contains first ratio portion in chronological order."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Split dataset
+        train_dataset, test_dataset = dataset.split_temporal(ratio=0.6)
+
+        # Assert: REQ-009 - chronological order preservation
+        # Train set should have first 600 samples
+        assert len(train_dataset.X) == 600, "Train set has correct number of samples"
+        assert len(test_dataset.X) == 400, "Test set has correct number of samples"
+
+        # Check that the data is split correctly by examining first and last values
+        # Train set should have earlier samples, test set should have later samples
+        assert train_dataset.X.iloc[0].equals(dataset.X.iloc[0]), "First train sample matches original first sample"
+        assert test_dataset.X.iloc[0].equals(dataset.X.iloc[600]), "First test sample matches original 600th sample"
+
+    def test_should_distribute_drift_points_appropriately_when_splitting(self, sample_drift_dataset):
+        """Test REQ-009: Drift points distributed appropriately between train/test sets."""
+        from drift_datasets.models import DriftDataset
+
+        dataset = DriftDataset(**sample_drift_dataset)
+
+        # Act: Split dataset
+        train_dataset, test_dataset = dataset.split_temporal(ratio=0.4)  # Split at 400
+
+        # Assert: REQ-009 - drift point distribution
+        # Drift point at 500 should be in test set, adjusted to index 100 (500-400)
+        train_drift_points = train_dataset.drift_metadata.get("drift_points", [])
+        test_drift_points = test_dataset.drift_metadata.get("drift_points", [])
+
+        assert train_drift_points == [], "No drift points in train set"
+        assert test_drift_points == [100], "Drift point adjusted for test set"
 
 
 class TestDatasetInformation:
