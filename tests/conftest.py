@@ -17,6 +17,42 @@ import toml
 
 
 @pytest.fixture(scope="session")
+def capymoa_interface_mock():
+    """Mock CapyMOAInterface for factory testing."""
+    with patch("drift_datasets.factory.CapyMOAInterface") as mock_interface_class:
+        mock_interface = Mock()
+
+        # Create a mock generator that returns data based on configuration
+        def create_mock_generator(generator_name, generator_config):
+            # Validate generator name like the real implementation
+            if generator_name not in ["SineGenerator", "HyperplaneGenerator", "STAGGERGenerator", "SEAGenerator"]:
+                raise ValueError(f"Unsupported generator: {generator_name}")
+
+            mock_generator = Mock()
+            n_instances = generator_config.get("n_instances", 1000)
+
+            mock_generator.generate.return_value = (
+                pd.DataFrame(
+                    {
+                        "x": np.random.RandomState(42).random(n_instances),
+                        "y": np.random.RandomState(42).random(n_instances),
+                    }
+                ),
+                pd.Series(np.random.RandomState(42).randint(0, 2, n_instances), name="target"),
+            )
+            return mock_generator
+
+        # Mock the create_generator method to return our mock generator factory
+        mock_interface.create_generator.side_effect = create_mock_generator
+        mock_interface.get_generator_parameters.return_value = ["n_instances", "random_seed", "noise_level", "classification_function"]
+        mock_interface.check_availability.return_value = (True, {"version": "1.0.0", "generators": ["SineGenerator"]})
+        mock_interface.translate_parameters.return_value = {"numInstances": 1000, "randomSeed": 42}
+
+        mock_interface_class.return_value = mock_interface
+        yield mock_interface_class
+
+
+@pytest.fixture(scope="session")
 def capymoa_service():
     """Mock CapyMOA service for deterministic test execution."""
     with patch("drift_datasets.generators.synthetic.CapyMOAService") as mock_service:
@@ -290,7 +326,11 @@ def error_scenarios():
                 "metadata": {"dimension": "multivariate"}
                 # Missing dataset section
             },
-            "invalid_generator": {"dataset": {"type": "synthetic", "generator": "InvalidGenerator"}},
+            "invalid_generator": {
+                "dataset": {"name": "test", "type": "synthetic", "generator": "InvalidGenerator"},
+                "generator_config": {"n_instances": 1000, "random_seed": 42},
+                "metadata": {"dimension": "multivariate", "labeling": "supervised", "n_classes": 2},
+            },
             "invalid_drift_pattern": {"drift_config": {"drift_patterns": ["invalid_pattern"]}},
         },
         "network_errors": {

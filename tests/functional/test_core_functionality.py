@@ -14,7 +14,7 @@ import toml
 class TestCoreDatasetGeneration:
     """Test core dataset generation functionality (REQ-001)."""
 
-    def test_should_create_synthetic_dataset_when_valid_config_provided(self, capymoa_service, sample_toml_configs):
+    def test_should_create_synthetic_dataset_when_valid_config_provided(self, capymoa_service, capymoa_interface_mock, sample_toml_configs):
         """Test REQ-001: Factory method creates DriftDataset objects with ground truth metadata."""
         from drift_datasets import create_dataset
 
@@ -51,10 +51,10 @@ class TestCoreDatasetGeneration:
         assert dataset.source_type == "real_world"
         assert hasattr(dataset, "X"), "Real-world dataset must have features"
         assert hasattr(dataset, "y"), "Real-world dataset must have targets"
-        assert 321 in str(dataset.dataset_metadata), "Dataset metadata should reference UCI ID"
+        assert "321" in str(dataset.dataset_metadata), "Dataset metadata should reference UCI ID"
 
     def test_should_create_mixed_dataset_when_valid_mixed_config_provided(
-        self, capymoa_service, uci_repository_service, sample_toml_configs
+        self, capymoa_service, capymoa_interface_mock, uci_repository_service, sample_toml_configs
     ):
         """Test REQ-001: Factory method handles mixed dataset creation."""
         from drift_datasets import create_dataset
