@@ -1,0 +1,193 @@
+<svg width="1000" height="700" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+    <linearGradient id="tomlGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8f4fd;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b3d9f2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="configGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f0f8e8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c8e6c9;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="factoryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff3e0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffcc80;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dataGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f3e5f5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ce93d8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pandasGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e1f5fe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#81d4fa;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Title -->
+  <text x="500" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333">
+    drift-datasets: TOML → DriftDataset Architecture
+  </text>
+  
+  <!-- Input: TOML Configuration -->
+  <rect x="50" y="60" width="150" height="80" rx="8" fill="url(#tomlGradient)" stroke="#2196F3" stroke-width="2"/>
+  <text x="125" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1976D2">TOML Config</text>
+  <text x="125" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">config.toml</text>
+  <text x="125" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">[dataset]</text>
+  <text x="125" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">[drift_config]</text>
+  
+  <!-- Configuration Manager -->
+  <rect x="280" y="60" width="150" height="80" rx="8" fill="url(#configGradient)" stroke="#4CAF50" stroke-width="2"/>
+  <text x="355" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2E7D32">Config Manager</text>
+  <text x="355" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">Parse &amp; Validate</text>
+  <text x="355" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">• TOML parsing</text>
+  <text x="355" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">• Schema validation</text>
+  
+  <!-- Factory -->
+  <rect x="510" y="60" width="150" height="80" rx="8" fill="url(#factoryGradient)" stroke="#FF9800" stroke-width="2"/>
+  <text x="585" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#F57C00">Factory</text>
+  <text x="585" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">create_dataset()</text>
+  <text x="585" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">Route by type:</text>
+  <text x="585" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">synthetic/real/mixed</text>
+  
+  <!-- Data Sources -->
+  <!-- CapyMOA -->
+  <rect x="200" y="200" width="140" height="100" rx="8" fill="url(#dataGradient)" stroke="#9C27B0" stroke-width="2"/>
+  <text x="270" y="225" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#7B1FA2">CapyMOA</text>
+  <text x="270" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">Synthetic Data</text>
+  <text x="270" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• SineGenerator</text>
+  <text x="270" y="272" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• HyperplaneGen</text>
+  <text x="270" y="284" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• STAGGERGen</text>
+  <text x="270" y="296" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">+ Drift injection</text>
+  
+  <!-- UCI MLRepo -->
+  <rect x="360" y="200" width="140" height="100" rx="8" fill="url(#dataGradient)" stroke="#9C27B0" stroke-width="2"/>
+  <text x="430" y="225" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#7B1FA2">UCI MLRepo</text>
+  <text x="430" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">Real-World Data</text>
+  <text x="430" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• Electricity</text>
+  <text x="430" y="272" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• Weather</text>
+  <text x="430" y="284" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• Airlines</text>
+  <text x="430" y="296" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">+ Optional drift</text>
+  
+  <!-- Mixed Generator -->
+  <rect x="520" y="200" width="140" height="100" rx="8" fill="url(#dataGradient)" stroke="#9C27B0" stroke-width="2"/>
+  <text x="590" y="225" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#7B1FA2">Mixed Gen</text>
+  <text x="590" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">Combined Data</text>
+  <text x="590" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• Sequential</text>
+  <text x="590" y="272" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• Interleaved</text>
+  <text x="590" y="284" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• Hierarchical</text>
+  <text x="590" y="296" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">Unified metadata</text>
+  
+  <!-- Pandas Processing -->
+  <rect x="350" y="350" width="200" height="80" rx="8" fill="url(#pandasGradient)" stroke="#00BCD4" stroke-width="2"/>
+  <text x="450" y="375" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#00838F">Pandas Processing</text>
+  <text x="450" y="395" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">Data Transformation</text>
+  <text x="450" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">X: DataFrame • y: Series • Metadata enrichment</text>
+  <text x="450" y="422" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">Type inference • Feature metadata • Validation</text>
+  
+  <!-- Final Output: DriftDataset -->
+  <rect x="350" y="480" width="200" height="120" rx="8" fill="#e8f5e8" stroke="#2E7D32" stroke-width="3"/>
+  <text x="450" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2E7D32">DriftDataset</text>
+  <text x="450" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#333">Unified Dataset Object</text>
+  
+  <!-- Components of DriftDataset -->
+  <rect x="365" y="535" width="60" height="25" rx="3" fill="#ffebee" stroke="#f44336" stroke-width="1"/>
+  <text x="395" y="552" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#d32f2f">X: DataFrame</text>
+  
+  <rect x="435" y="535" width="50" height="25" rx="3" fill="#e3f2fd" stroke="#2196f3" stroke-width="1"/>
+  <text x="460" y="552" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1976d2">y: Series</text>
+  
+  <rect x="495" y="535" width="40" height="25" rx="3" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1"/>
+  <text x="515" y="552" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#7b1fa2">Config</text>
+  
+  <rect x="365" y="567" width="85" height="25" rx="3" fill="#fff3e0" stroke="#ff9800" stroke-width="1"/>
+  <text x="407" y="584" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#f57c00">DriftMetadata</text>
+  
+  <rect x="460" y="567" width="75" height="25" rx="3" fill="#e8f5e8" stroke="#4caf50" stroke-width="1"/>
+  <text x="497" y="584" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#2e7d32">DataMetadata</text>
+  
+  <!-- Research Methods -->
+  <rect x="720" y="480" width="200" height="120" rx="8" fill="#f1f8e9" stroke="#689F38" stroke-width="2"/>
+  <text x="820" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#558B2F">Research Methods</text>
+  <text x="820" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">Analysis &amp; Filtering</text>
+  <text x="820" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• get_drift_detection_features()</text>
+  <text x="820" y="557" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• is_drift_point()</text>
+  <text x="820" y="569" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• split_temporal()</text>
+  <text x="820" y="581" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• get_concept_segments()</text>
+  <text x="820" y="593" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">Feature role filtering</text>
+  
+  <!-- Parameter Translation -->
+  <rect x="680" y="200" width="140" height="100" rx="8" fill="#fff8e1" stroke="#FFC107" stroke-width="2"/>
+  <text x="750" y="225" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#FF8F00">Parameter</text>
+  <text x="750" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#FF8F00">Translation</text>
+  <text x="750" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">Research → CapyMOA</text>
+  <text x="750" y="272" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• transition_duration</text>
+  <text x="750" y="284" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">• drift_intensity</text>
+  <text x="750" y="296" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">→ width, alpha</text>
+  
+  <!-- Data Flow Arrows -->
+  <!-- TOML to Config Manager -->
+  <path d="M 200 100 L 270 100" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Config Manager to Factory -->
+  <path d="M 430 100 L 500 100" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Factory to Data Sources -->
+  <path d="M 585 140 L 585 160 L 270 160 L 270 190" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 585 140 L 585 160 L 430 160 L 430 190" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 585 140 L 585 190" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Parameter Translation -->
+  <path d="M 660 100 L 720 100 L 720 160 L 750 160 L 750 190" stroke="#FFC107" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 750 300 L 750 320 L 270 320 L 270 300" stroke="#FFC107" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Data Sources to Pandas -->
+  <path d="M 270 300 L 270 320 L 370 320 L 370 340" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 430 300 L 430 320 L 430 340" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 590 300 L 590 320 L 530 320 L 530 340" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Pandas to DriftDataset -->
+  <path d="M 450 430 L 450 470" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- DriftDataset to Research Methods -->
+  <path d="M 550 540 L 710 540" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Side Labels -->
+  <text x="20" y="100" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#666" transform="rotate(-90, 20, 100)">INPUT</text>
+  <text x="20" y="390" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#666" transform="rotate(-90, 20, 390)">PROCESSING</text>
+  <text x="20" y="540" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#666" transform="rotate(-90, 20, 540)">OUTPUT</text>
+  
+  <!-- Legend -->
+  <rect x="750" y="60" width="200" height="120" rx="5" fill="#f9f9f9" stroke="#ccc" stroke-width="1"/>
+  <text x="850" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#333">Data Flow Legend</text>
+  
+  <line x1="760" y1="90" x2="780" y2="90" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="785" y="94" font-family="Arial, sans-serif" font-size="10" fill="#333">Configuration flow</text>
+  
+  <line x1="760" y1="105" x2="780" y2="105" stroke="#FFC107" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="785" y="109" font-family="Arial, sans-serif" font-size="10" fill="#333">Parameter translation</text>
+  
+  <rect x="760" y="115" width="15" height="10" fill="url(#tomlGradient)" stroke="#2196F3" stroke-width="1"/>
+  <text x="780" y="123" font-family="Arial, sans-serif" font-size="10" fill="#333">Input/Config</text>
+  
+  <rect x="760" y="130" width="15" height="10" fill="url(#dataGradient)" stroke="#9C27B0" stroke-width="1"/>
+  <text x="780" y="138" font-family="Arial, sans-serif" font-size="10" fill="#333">Data sources</text>
+  
+  <rect x="760" y="145" width="15" height="10" fill="url(#pandasGradient)" stroke="#00BCD4" stroke-width="1"/>
+  <text x="780" y="153" font-family="Arial, sans-serif" font-size="10" fill="#333">Processing</text>
+  
+  <rect x="760" y="160" width="15" height="10" fill="#e8f5e8" stroke="#2E7D32" stroke-width="1"/>
+  <text x="780" y="168" font-family="Arial, sans-serif" font-size="10" fill="#333">Output</text>
+  
+  <!-- Bottom description -->
+  <text x="500" y="650" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#666">
+    TOML configuration → Parsed &amp; validated → Factory routing → Data generation (CapyMOA/UCI/Mixed) → 
+  </text>
+  <text x="500" y="665" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#666">
+    Pandas transformation → Unified DriftDataset → Research analysis methods
+  </text>
+  <text x="500" y="685" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#999">
+    Ground truth drift metadata preserved throughout entire pipeline for ML research reproducibility
+  </text>
+</svg>

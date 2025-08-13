@@ -51,15 +51,34 @@ The library follows a factory pattern with three main generators:
 
 All generators produce unified `DriftDataset` objects containing feature matrices (X), targets (y), and comprehensive drift metadata. A `ParameterTranslator` automatically converts research-friendly parameters to implementation-specific values.
 
-**Architecture diagram**: [TODO: Add ./docs/architecture.png when available]
+### Data Flow Architecture
+
+The following diagram illustrates how TOML configuration files are transformed into `DriftDataset` objects through the interaction of different components:
+
+![Architecture Diagram](./docs/architecture_diagram.svg)
+
+**Key data transformations:**
+
+1. **Configuration Phase**: TOML files are parsed and validated by the `ConfigurationManager`
+2. **Factory Routing**: The `create_dataset()` function routes to appropriate generators based on dataset type
+3. **Data Generation**:
+   - **CapyMOA**: Java-based synthetic data generation with concept drift injection
+   - **UCI MLRepo**: Real-world dataset loading via `ucimlrepo` with optional drift simulation
+   - **Mixed**: Combination of synthetic and real-world sources with unified metadata
+4. **Parameter Translation**: Research-friendly parameters (e.g., `transition_duration`, `drift_intensity`) are automatically converted to implementation-specific values (CapyMOA `width`, `alpha`)
+5. **Pandas Processing**: Raw data is transformed into structured `DataFrame` (X) and `Series` (y) with comprehensive feature metadata
+6. **DriftDataset Creation**: Unified object containing data, ground truth drift metadata, and feature specifications
+7. **Research Methods**: Built-in analysis methods for drift detection research workflows
 
 ## Tech Stack and Requirements
 
 - **Language**: Python ≥3.10
 - **Core Dependencies**:
   - CapyMOA ≥0.10.0 (synthetic dataset generation)
-  - ucimlrepo ≥0.0.7 (real-world dataset access)
+  - ucimlrepo ≥0.0.7 (UCI ML Repository access)
   - NumPy ≥2.2.0, pandas ≥2.3.0, SciPy ≥1.15.0 (data manipulation)
+  - pydantic ≥2.0.0 (data validation and models)
+  - toml ≥0.10.0 (configuration parsing)
 - **System Requirements**:
   - Java Runtime Environment (required for CapyMOA synthetic generation)
   - Internet connection (for UCI dataset downloads)
