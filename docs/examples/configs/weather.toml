@@ -1,0 +1,73 @@
+# ExpertSystems Real-World Dataset Configuration - Weather
+# Reproduces the Weather dataset from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - Real-world dataset from weather prediction domain
+# - Binary classification for rain prediction
+# - Temporal patterns with seasonal variations
+# - Natural concept drift due to climate changes
+
+[dataset]
+    name        = "Weather"
+    type        = "real_world"
+    source      = "ucimlrepo"
+    description = "Weather dataset from ExpertSystems study with natural temporal concept drift"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+    temporal  = true
+    task_type = "classification"
+
+# Weather dataset features
+[[features]]
+    name        = "temperature"
+    type        = "continuous"
+    role        = "feature"
+    description = "Temperature measurement"
+
+[[features]]
+    name        = "humidity"
+    type        = "continuous"
+    role        = "feature"
+    description = "Humidity percentage"
+
+[[features]]
+    name        = "pressure"
+    type        = "continuous"
+    role        = "feature"
+    description = "Atmospheric pressure"
+
+[[features]]
+    name        = "wind_speed"
+    type        = "continuous"
+    role        = "feature"
+    description = "Wind speed measurement"
+
+[[features]]
+    name        = "wind_direction"
+    type        = "continuous"
+    role        = "feature"
+    description = "Wind direction in degrees"
+
+[[features]]
+    name        = "rain"
+    type        = "categorical"
+    role        = "target"
+    description = "Rain occurrence (yes/no)"
+
+# UCI dataset configuration (weather-related dataset)
+[uci_config]
+    dataset_id    = 275
+    cache_data    = true
+    preprocessing = ["normalize", "temporal_order"]
+
+# Natural drift patterns (seasonal and climate variations)
+[drift_config]
+    drift_points     = [3000, 6000, 9000]
+    drift_types      = ["covariate", "concept", "covariate"]
+    drift_patterns   = ["gradual", "gradual", "gradual"]
+    drift_simulation = "temporal_shift"
+    stable_periods   = false # Continuous seasonal variations

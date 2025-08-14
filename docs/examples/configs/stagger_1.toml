@@ -1,0 +1,64 @@
+# ExpertSystems STAGGER Dataset Configuration - Stagger(1)
+# Reproduces the Stagger(1) dataset from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - Three contexts represented by 40 instances each, t=1, d=100
+# - Discrete concept changes with attribute interactions
+# - 3 categorical attributes: shape, color, size (3 values each)
+# - Boolean classification based on logical rules that change at drift points
+# - Abrupt drift pattern with concept cycling
+
+[dataset]
+    name        = "STAGGER(1)"
+    type        = "synthetic"
+    source      = "capymoa"
+    generator   = "STAGGERGenerator"
+    description = "STAGGER(1) dataset with 40 instances per context from ExpertSystems study"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+    temporal  = true
+    task_type = "classification"
+
+# STAGGER features: 3 categorical attributes
+[[features]]
+    name        = "feature_0"
+    type        = "categorical"
+    role        = "feature"
+    description = "Size attribute: small, medium, or large"
+
+[[features]]
+    name        = "feature_1"
+    type        = "categorical"
+    role        = "feature"
+    description = "Color attribute: red, green, or blue"
+
+[[features]]
+    name        = "feature_2"
+    type        = "categorical"
+    role        = "feature"
+    description = "Shape attribute: square, circle, or triangle"
+
+[[features]]
+    name        = "target"
+    type        = "categorical"
+    role        = "target"
+    description = "Boolean classification based on logical rules"
+
+# Generator configuration for STAGGER(1) - three 40-instance contexts
+[generator_config]
+    n_instances = 120 # 3 contexts × 40 instances each
+    random_seed = 42
+
+# Drift configuration: cycling through STAGGER concepts every 40 instances
+[drift_config]
+    drift_points         = [40, 80]
+    drift_types          = ["concept", "concept"]
+    drift_patterns       = ["abrupt", "abrupt"]
+    concept_reversal     = false
+    concepts             = ["Concept_1", "Concept_2", "Concept_3"]
+    stable_periods       = true
+    transition_durations = [0, 0] # Abrupt changes

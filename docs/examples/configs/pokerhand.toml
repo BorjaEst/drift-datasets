@@ -1,0 +1,103 @@
+# ExpertSystems Real-World Dataset Configuration - Poker Hand
+# Reproduces the Poker Hand dataset from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - Real-world dataset from UCI repository (dataset_id = 158)
+# - Poker hand evaluation data
+# - Multi-class classification (10 poker hands)
+# - Balanced dataset with clear class boundaries
+
+[dataset]
+    name        = "Poker Hand"
+    type        = "real_world"
+    source      = "ucimlrepo"
+    description = "Poker Hand dataset from ExpertSystems study for poker hand classification"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 10
+    temporal  = false
+    task_type = "classification"
+
+# Poker Hand dataset features
+[[features]]
+    name        = "suit_1"
+    type        = "categorical"
+    role        = "feature"
+    description = "Suit of card 1 (1-4)"
+
+[[features]]
+    name        = "rank_1"
+    type        = "categorical"
+    role        = "feature"
+    description = "Rank of card 1 (1-13)"
+
+[[features]]
+    name        = "suit_2"
+    type        = "categorical"
+    role        = "feature"
+    description = "Suit of card 2 (1-4)"
+
+[[features]]
+    name        = "rank_2"
+    type        = "categorical"
+    role        = "feature"
+    description = "Rank of card 2 (1-13)"
+
+[[features]]
+    name        = "suit_3"
+    type        = "categorical"
+    role        = "feature"
+    description = "Suit of card 3 (1-4)"
+
+[[features]]
+    name        = "rank_3"
+    type        = "categorical"
+    role        = "feature"
+    description = "Rank of card 3 (1-13)"
+
+[[features]]
+    name        = "suit_4"
+    type        = "categorical"
+    role        = "feature"
+    description = "Suit of card 4 (1-4)"
+
+[[features]]
+    name        = "rank_4"
+    type        = "categorical"
+    role        = "feature"
+    description = "Rank of card 4 (1-13)"
+
+[[features]]
+    name        = "suit_5"
+    type        = "categorical"
+    role        = "feature"
+    description = "Suit of card 5 (1-4)"
+
+[[features]]
+    name        = "rank_5"
+    type        = "categorical"
+    role        = "feature"
+    description = "Rank of card 5 (1-13)"
+
+[[features]]
+    name        = "poker_hand"
+    type        = "categorical"
+    role        = "target"
+    description = "Poker hand classification (0-9)"
+
+# UCI dataset configuration
+[uci_config]
+    dataset_id    = 158
+    cache_data    = true
+    preprocessing = ["normalize"]
+
+# Natural drift patterns (artificial injection for concept drift study)
+[drift_config]
+    drift_points     = [25000, 50000]
+    drift_types      = ["concept", "concept"]
+    drift_patterns   = ["abrupt", "abrupt"]
+    drift_simulation = "concept_shift"
+    stable_periods   = true

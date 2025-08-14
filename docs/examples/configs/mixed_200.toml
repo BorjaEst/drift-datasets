@@ -1,0 +1,72 @@
+# ExpertSystems Mixed Dataset Configuration - Mixed(200)
+# Reproduces the Mixed(200) dataset from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - Fast gradual drift configuration with 200 instances transition width
+# - Drift takes 200 instances to completely change context
+# - Occurs between time steps 47 and 53, with t=d=40
+# - 2 boolean (v, w) + 2 numerical (x, y) attributes
+# - Three verification conditions: v, w, and y < 0.5 + 0.3*sin(3πx)
+
+[dataset]
+    name        = "Mixed(200)"
+    type        = "synthetic"
+    source      = "capymoa"
+    generator   = "SineGenerator" # Base generator for mixed patterns
+    description = "Mixed(200) dataset with 200 instances transition width from ExpertSystems study"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+    temporal  = true
+    task_type = "classification"
+
+# Mixed dataset features: 2 boolean + 2 numerical
+[[features]]
+    name        = "v"
+    type        = "categorical"
+    role        = "feature"
+    description = "Boolean attribute v"
+
+[[features]]
+    name        = "w"
+    type        = "categorical"
+    role        = "feature"
+    description = "Boolean attribute w"
+
+[[features]]
+    name        = "x"
+    type        = "continuous"
+    role        = "feature"
+    description = "Numerical attribute x"
+
+[[features]]
+    name        = "y"
+    type        = "continuous"
+    role        = "feature"
+    description = "Numerical attribute y"
+
+[[features]]
+    name        = "target"
+    type        = "categorical"
+    role        = "target"
+    description = "Binary classification target"
+
+# Generator configuration for Mixed(200) - fast gradual drift
+[generator_config]
+    n_instances             = 2000 # Sufficient instances for transition
+    classification_function = 1
+    noise_level             = 0.0 # Noise-free dataset
+    random_seed             = 42
+
+# Mixed(200) drift configuration: 200 instances transition between steps 47-53
+[drift_config]
+    drift_points         = [1000]
+    drift_types          = ["concept"]
+    drift_patterns       = ["gradual"]
+    transition_durations = [200] # 200 instances transition width
+    stable_periods       = true
+    intermittent_drift   = true
+    concept_reversal     = true # Classification is reversed when drift occurs

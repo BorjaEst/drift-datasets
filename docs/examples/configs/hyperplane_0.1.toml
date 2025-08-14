@@ -1,20 +1,20 @@
-# ExpertSystems Hyperplane Dataset Configuration - Slow Rotation
-# Reproduces the Hyperplane Hyp(0.001) dataset from "A comparative study on concept drift detectors"
+# ExpertSystems Hyperplane Dataset Configuration - Fast Rotation
+# Reproduces the Hyperplane Hyp(0.1) dataset from "A comparative study on concept drift detectors"
 # Published in Expert Systems with Applications
 #
 # Dataset characteristics:
-# - 100,000 samples with continuous gradual drift (slow rotation)
+# - 100,000 samples with continuous gradual drift (fast rotation)
 # - Binary classification in 10-dimensional space
 # - All 10 dimensions affected by drift (rotation)
 # - 5% noise injection
 # - No stable periods (continuous drift throughout)
 
 [dataset]
-    name        = "expertsystems_hyperplane_slow"
+    name        = "Hyp(0.1)"
     type        = "synthetic"
     source      = "capymoa"
     generator   = "HyperplaneGenerator"
-    description = "Slow rotating hyperplane Hyp(0.001) from ExpertSystems study with continuous gradual drift"
+    description = "Fast rotating hyperplane Hyp(0.1) from ExpertSystems study with continuous gradual drift"
 
 [metadata]
     dimension = "multivariate"
@@ -80,15 +80,18 @@
     role        = "target"
     description = "Binary classification target"
 
-# Generator configuration for slow hyperplane rotation
+# Generator configuration for Hyp(0.1) - fast rotation hyperplane
 [generator_config]
-    n_instances = 100000
-    n_features  = 10
+    n_instances = 100000 # 100,000 instances as specified
+    n_features  = 10 # 10 drifting attributes
+    noise_level = 0.05 # 5% noise
     random_seed = 42
 
-# Continuous gradual drift configuration (slow rotation)
+# Continuous gradual drift configuration - rotation speed 0.1
 [drift_config]
-    drift_points     = [25000, 50000, 75000]
-    drift_patterns   = ["gradual", "gradual", "gradual"]
-    drift_types      = ["concept", "concept", "concept"]
+    drift_points     = [] # No discrete drift points - continuous rotation
+    drift_patterns   = ["continuous_gradual"]
+    drift_types      = ["concept"]
     continuous_drift = true
+    rotation_speed   = 0.1 # Fast rotation as specified
+    stable_periods   = false # Always changing

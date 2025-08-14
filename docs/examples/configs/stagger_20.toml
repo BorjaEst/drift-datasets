@@ -1,19 +1,21 @@
-# ExpertSystems STAGGER Dataset Configuration
-# Reproduces the STAGGER dataset from "A comparative study on concept drift detectors"
+# ExpertSystems STAGGER Dataset Configuration - Stagger(20)
+# Reproduces the Stagger(20) dataset from "A comparative study on concept drift detectors"
 # Published in Expert Systems with Applications
 #
 # Dataset characteristics:
+# - Modified configuration of Stagger(1) with t=20
+# - Three contexts represented by 40 instances each, but t=20
 # - Discrete concept changes with attribute interactions
-# - 3 categorical attributes: size (small, medium, large), color (red, green, blue), shape (square, circle, triangle)
+# - 3 categorical attributes: shape, color, size (3 values each)
 # - Boolean classification based on logical rules that change at drift points
 # - Abrupt drift pattern with concept cycling
 
 [dataset]
-    name        = "expertsystems_stagger"
+    name        = "STAGGER(20)"
     type        = "synthetic"
     source      = "capymoa"
     generator   = "STAGGERGenerator"
-    description = "STAGGER dataset from ExpertSystems study with discrete concept changes and attribute interactions"
+    description = "STAGGER(20) dataset with modified Stagger(1) configuration t=20 from ExpertSystems study"
 
 [metadata]
     dimension = "multivariate"
@@ -47,14 +49,14 @@
     role        = "target"
     description = "Boolean classification based on logical rules"
 
-# Generator configuration for STAGGER concepts
+# Generator configuration for STAGGER(20) - same as Stagger(1) but different evaluation
 [generator_config]
-    n_instances = 60000
+    n_instances = 120 # 3 contexts × 40 instances each (same as Stagger(1))
     random_seed = 42
 
-# Drift configuration: cycling through STAGGER concepts
+# Drift configuration: same as Stagger(1) - difference is in evaluation t=20
 [drift_config]
-    drift_points         = [20000, 40000]
+    drift_points         = [40, 80]
     drift_types          = ["concept", "concept"]
     drift_patterns       = ["abrupt", "abrupt"]
     concept_reversal     = false

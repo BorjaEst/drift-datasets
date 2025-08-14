@@ -1,0 +1,73 @@
+# ExpertSystems Sine Dataset Configuration - Sine(5000)
+# Reproduces the Sine(5000) dataset from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - Each context contains 5000 instances, t=10
+# - Based on SINE200 dataset
+# - Binary classification with concept reversal after each drift
+# - Two relevant + two irrelevant features (4 total attributes)
+# - Abrupt drift pattern with stable periods between drifts
+
+[dataset]
+    name        = "Sine(5000)"
+    type        = "synthetic"
+    source      = "capymoa"
+    generator   = "SineGenerator"
+    description = "Sine(5000) dataset with 5000 instances per context from ExpertSystems comparative study"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 2
+    temporal  = true
+    task_type = "classification"
+
+# Feature specifications matching the original paper
+# 2 relevant + 2 irrelevant attributes (4 total)
+[[features]]
+    name        = "feature_0"
+    type        = "continuous"
+    role        = "feature"
+    description = "X coordinate from sine function"
+
+[[features]]
+    name        = "feature_1"
+    type        = "continuous"
+    role        = "feature"
+    description = "Y coordinate from cosine function"
+
+[[features]]
+    name        = "irrelevant_0"
+    type        = "continuous"
+    role        = "feature"
+    description = "Irrelevant attribute 1"
+
+[[features]]
+    name        = "irrelevant_1"
+    type        = "continuous"
+    role        = "feature"
+    description = "Irrelevant attribute 2"
+
+[[features]]
+    name        = "target"
+    type        = "categorical"
+    role        = "target"
+    description = "Binary classification target"
+
+# Generator configuration matching ExpertSystems Sine(5000)
+[generator_config]
+    n_instances             = 20000 # 4 contexts × 5000 instances each
+    classification_function = 1
+    noise_level             = 0.0 # No noise for cleaner results
+    random_seed             = 42
+
+# Drift configuration: concept reversal every 5000 instances
+[drift_config]
+    drift_points         = [5000, 10000, 15000]
+    drift_types          = ["concept", "concept", "concept"]
+    drift_patterns       = ["abrupt", "abrupt", "abrupt"]
+    concept_reversal     = true
+    stable_periods       = true
+    transition_durations = [0, 0, 0] # Abrupt changes
+    concepts             = ["Original", "Reversed", "Original", "Reversed"]

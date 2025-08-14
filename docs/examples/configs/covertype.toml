@@ -1,0 +1,103 @@
+# ExpertSystems Real-World Dataset Configuration - Covertype
+# Reproduces the Covertype dataset from "A comparative study on concept drift detectors"
+# Published in Expert Systems with Applications
+#
+# Dataset characteristics:
+# - Real-world dataset from UCI repository (dataset_id = 31)
+# - Forest covertype prediction based on cartographic variables
+# - Multi-class classification (7 forest cover types)
+# - Large dataset with natural patterns
+
+[dataset]
+    name        = "Covertype"
+    type        = "real_world"
+    source      = "ucimlrepo"
+    description = "Covertype dataset from ExpertSystems study for forest cover type prediction"
+
+[metadata]
+    dimension = "multivariate"
+    labeling  = "supervised"
+    n_classes = 7
+    temporal  = false
+    task_type = "classification"
+
+# Covertype dataset features (simplified for actual UCI structure)
+[[features]]
+    name        = "elevation"
+    type        = "continuous"
+    role        = "feature"
+    description = "Elevation in meters"
+
+[[features]]
+    name        = "aspect"
+    type        = "continuous"
+    role        = "feature"
+    description = "Aspect in degrees azimuth"
+
+[[features]]
+    name        = "slope"
+    type        = "continuous"
+    role        = "feature"
+    description = "Slope in degrees"
+
+[[features]]
+    name        = "horizontal_distance_to_hydrology"
+    type        = "continuous"
+    role        = "feature"
+    description = "Horizontal distance to nearest surface water"
+
+[[features]]
+    name        = "vertical_distance_to_hydrology"
+    type        = "continuous"
+    role        = "feature"
+    description = "Vertical distance to nearest surface water"
+
+[[features]]
+    name        = "horizontal_distance_to_roadways"
+    type        = "continuous"
+    role        = "feature"
+    description = "Horizontal distance to nearest roadway"
+
+[[features]]
+    name        = "hillshade_9am"
+    type        = "continuous"
+    role        = "feature"
+    description = "Hillshade index at 9am"
+
+[[features]]
+    name        = "hillshade_noon"
+    type        = "continuous"
+    role        = "feature"
+    description = "Hillshade index at noon"
+
+[[features]]
+    name        = "hillshade_3pm"
+    type        = "continuous"
+    role        = "feature"
+    description = "Hillshade index at 3pm"
+
+[[features]]
+    name        = "horizontal_distance_to_fire_points"
+    type        = "continuous"
+    role        = "feature"
+    description = "Horizontal distance to nearest wildfire ignition points"
+
+[[features]]
+    name        = "cover_type"
+    type        = "categorical"
+    role        = "target"
+    description = "Forest cover type (1-7)"
+
+# UCI dataset configuration
+[uci_config]
+    dataset_id    = 31
+    cache_data    = true
+    preprocessing = ["normalize"]
+
+# Natural drift patterns (no artificial injection)
+[drift_config]
+    drift_points     = [100000, 200000]
+    drift_types      = ["covariate", "concept"]
+    drift_patterns   = ["gradual", "abrupt"]
+    drift_simulation = "natural"
+    stable_periods   = true

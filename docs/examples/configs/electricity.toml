@@ -9,7 +9,7 @@
 # - Natural concept drift due to market changes
 
 [dataset]
-    name        = "expertsystems_electricity"
+    name        = "Electricity"
     type        = "real_world"
     source      = "ucimlrepo"
     description = "Electricity pricing dataset from ExpertSystems study with natural concept drift"

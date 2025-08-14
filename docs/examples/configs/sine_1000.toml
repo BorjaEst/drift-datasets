@@ -1,19 +1,20 @@
-# ExpertSystems Sine Dataset Configuration
-# Reproduces the Sine dataset from "A comparative study on concept drift detectors"
+# ExpertSystems Sine Dataset Configuration - Sine(1000)
+# Reproduces the Sine(1000) dataset from "A comparative study on concept drift detectors"
 # Published in Expert Systems with Applications
 #
 # Dataset characteristics:
-# - 50,000 samples with concept drift at points 10,000, 25,000, and 40,000
+# - Each context contains 1000 instances, t=1, d=100
+# - Similar to SINIRREL1 dataset
 # - Binary classification with concept reversal after each drift
-# - Two continuous features (x, y) generated from sine and cosine functions
+# - Two relevant + two irrelevant features (4 total attributes)
 # - Abrupt drift pattern with stable periods between drifts
 
 [dataset]
-    name        = "expertsystems_sine"
+    name        = "Sine(1000)"
     type        = "synthetic"
     source      = "capymoa"
     generator   = "SineGenerator"
-    description = "Sine dataset from ExpertSystems comparative study with concept reversal at drift points"
+    description = "Sine(1000) dataset with 1000 instances per context from ExpertSystems comparative study"
 
 [metadata]
     dimension = "multivariate"
@@ -23,6 +24,7 @@
     task_type = "classification"
 
 # Feature specifications matching the original paper
+# 2 relevant + 2 irrelevant attributes (4 total)
 [[features]]
     name        = "feature_0"
     type        = "continuous"
@@ -36,21 +38,33 @@
     description = "Y coordinate from cosine function"
 
 [[features]]
+    name        = "irrelevant_0"
+    type        = "continuous"
+    role        = "feature"
+    description = "Irrelevant attribute 1"
+
+[[features]]
+    name        = "irrelevant_1"
+    type        = "continuous"
+    role        = "feature"
+    description = "Irrelevant attribute 2"
+
+[[features]]
     name        = "target"
     type        = "categorical"
     role        = "target"
     description = "Binary classification target"
 
-# Generator configuration matching ExpertSystems paper
+# Generator configuration matching ExpertSystems Sine(1000)
 [generator_config]
-    n_instances             = 50000
+    n_instances             = 4000 # 4 contexts × 1000 instances each
     classification_function = 1
     noise_level             = 0.0 # No noise for cleaner results
     random_seed             = 42
 
-# Drift configuration: 3 concept drifts with reversal
+# Drift configuration: concept reversal every 1000 instances
 [drift_config]
-    drift_points         = [10000, 25000, 40000]
+    drift_points         = [1000, 2000, 3000]
     drift_types          = ["concept", "concept", "concept"]
     drift_patterns       = ["abrupt", "abrupt", "abrupt"]
     concept_reversal     = true
